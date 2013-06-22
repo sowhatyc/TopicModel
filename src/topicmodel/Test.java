@@ -10,10 +10,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Attributes;
@@ -34,7 +38,9 @@ public class Test {
 //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
 //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
 //        String url = "http://bbs.tianya.cn/list-develop-1.shtml";
-        String url = "http://bbs.tianya.cn/post-develop-1347012-1.shtml";
+//        String url = "http://bbs.tianya.cn/post-develop-1347012-1.shtml";
+//        String url = "http://tieba.baidu.com/f?kw=%B1%F6%B5%C3k5";
+        String url = "http://tieba.baidu.com/p/2406389471";
         String retVal[] = new WebCrawler().getContent(url);
         long start = System.currentTimeMillis();
         Document doc = Jsoup.parse(retVal[1], url);
@@ -45,18 +51,23 @@ public class Test {
         
         Element element = doc.body();
         cleanTree(element);
-        Map<String, ArrayList<Element>> sequenceMap = getSequenceMap(element, 2);
-        Map<Element, ArrayList<String>> parentStructualMap = getParentStructualMap(sequenceMap);
-        parentStructualMap = unionParentStructualMap(parentStructualMap, element);
-        Iterator<Element> keyIter = parentStructualMap.keySet().iterator();
-        while(keyIter.hasNext()){
-            Element ele = keyIter.next();
-            System.out.println("Parent Sequence : " + getHierarchicalSequence(ele, 2, true));
-            System.out.println("Son Element Sequence : ");
-            for(String sequence : parentStructualMap.get(ele)){
-                System.out.println(sequence + "  " + sequenceMap.get(sequence).size());
-            }
-            System.out.println("*********************************");
+//        Map<String, ArrayList<Element>> sequenceMap = getSequenceMap(element, 2);
+//        Map<Element, ArrayList<String>> parentStructualMap = getParentStructualMap(sequenceMap);
+//        parentStructualMap = unionParentStructualMap(parentStructualMap, element);
+//        Iterator<Element> keyIter = parentStructualMap.keySet().iterator();
+//        while(keyIter.hasNext()){
+//            Element ele = keyIter.next();
+//            System.out.println("Parent Sequence : " + getHierarchicalSequence(ele, 2, true));
+//            System.out.println("Son Element Sequence : ");
+//            for(String sequence : parentStructualMap.get(ele)){
+//                System.out.println(sequence + "  " + sequenceMap.get(sequence).size());
+//            }
+//            System.out.println("*********************************");
+//        }
+        Set<Element> freqEles = getFreqElement(element);
+        Iterator<Element> iter = freqEles.iterator();
+        while(iter.hasNext()){
+            System.out.println(getVerifiedSequence(iter.next(), 1, true));
         }
         System.out.println(System.currentTimeMillis() - start);
         
@@ -235,7 +246,27 @@ public class Test {
     }
     
     
-    public static boolean getLatentFreqSeq(Element element, boolean latentNodeChild){
+    public static Set<Element> getFreqElement(Element root){
+        Set<Element> freqElements = new HashSet<>();
+        List<Element> elements = new LinkedList<>();
+        elements.add(root);
+        while(!elements.isEmpty()){
+            Element element = elements.get(0);
+            String sequence = getHierarchicalSequence(element, 1, true).replaceAll("@null", "");
+            boolean isFEle = isFreqElement(element, freqElements.contains(element.parent()));
+            Elements childEles = element.children();
+            for(Element childEle : childEles){
+                elements.add(childEle);
+            }
+            elements.remove(0);
+            if(isFEle){
+                freqElements.add(element);
+            }
+        }
+        return freqElements;
+    }
+    
+    public static boolean isFreqElement(Element element, boolean latentNodeChild){
         int continualOccourence;
         if(latentNodeChild){
             continualOccourence = 2;
@@ -252,6 +283,7 @@ public class Test {
             childEleSequence.add(sequence.replaceAll("@null", ""));
         }
         int maxOccourence = 0;
+        String freqSequence = null;
         for(int componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
@@ -272,13 +304,19 @@ public class Test {
                     if(currentSequence.compareTo(nextSequence) == 0){
                         occourence++;
                     }else{
-                        if(occourence > maxOccourence){
+                        if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
                             maxOccourence = occourence;
+                            freqSequence = currentSequence;
                         }
                         occourence = 1; 
                         currentSequence = nextSequence;
                     }
                     currentIndex += componetSize;
+                    nextSequence = "";
+                }
+                if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
+                    maxOccourence = occourence;
+                    freqSequence = currentSequence;
                 }
                 if(maxOccourence >= continualOccourence){
                     break;
@@ -293,6 +331,12 @@ public class Test {
         }else{
             return false;
         }
+    }
+    
+    public static boolean isSequenceSingleLevel(String sequence){
+        Pattern pattern = Pattern.compile("<[^/]+?><[^/]+?>");
+        Matcher matcher = pattern.matcher(sequence);
+        return matcher.find();
     }
     
     public static Map<String, ArrayList<Element>> getSequenceMap(Element eleRoot, int level){
@@ -318,7 +362,7 @@ public class Test {
     }
     
     public static String getVerifiedSequence(Element element, int level, boolean includeAttVal){
-        String sequence = getHierarchicalSequence(element, level, false);
+        String sequence = getHierarchicalSequence(element, level, includeAttVal);
         int emptyNodeNum = 0;
         int startIndex = 0;
         int findIndex = -1;
