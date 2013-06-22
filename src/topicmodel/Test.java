@@ -235,8 +235,7 @@ public class Test {
     }
     
     
-    
-    public static LatentFrequentElement getLatentFreqSeq(Element element, boolean latentNodeChild){
+    public static boolean getLatentFreqSeq(Element element, boolean latentNodeChild){
         int continualOccourence;
         if(latentNodeChild){
             continualOccourence = 2;
@@ -245,18 +244,15 @@ public class Test {
         }
         Elements childElements = element.children();
         if(childElements.size() < continualOccourence){
-            return null;
+            return false;
         }
         List<String> childEleSequence = new ArrayList<>();
         for(Element ele : childElements){
             String sequence = getHierarchicalSequence(ele, 2, false);
             childEleSequence.add(sequence.replaceAll("@null", ""));
         }
-        String latentFreseq = null;
         int maxOccourence = 0;
-        int componetSize;
-        int startPosition = 0;
-        for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
+        for(int componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
             for(int i=0; i<componetSize; i++){
@@ -274,14 +270,10 @@ public class Test {
                         nextSequence += childEleSequence.get(j);
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
-                        if(occourence == 1){
-                            startPosition = currentIndex;
-                        }
                         occourence++;
                     }else{
                         if(occourence > maxOccourence){
                             maxOccourence = occourence;
-                            latentFreseq = currentSequence;
                         }
                         occourence = 1; 
                         currentSequence = nextSequence;
@@ -297,15 +289,9 @@ public class Test {
             }
         }
         if(maxOccourence >= continualOccourence){
-            LatentFrequentElement lfe = new LatentFrequentElement();
-            lfe.setComponentSize(componetSize);
-            lfe.setElement(element);
-            lfe.setFrequentSequence(latentFreseq);
-            lfe.setStartPosition(startPosition);
-            lfe.setOccurenceNum(maxOccourence);
-            return lfe;
+            return true;
         }else{
-            return null;
+            return false;
         }
     }
     
@@ -347,16 +333,15 @@ public class Test {
         }
     }
     
-    public static String getHierarchicalSequence(Element element, int level, boolean includeAttVal){
+    public static String getHierarchicalSequence(Element element, int level, boolean includeAttributes){
         if(level <= 0){
             return "";
         }
         String sequence = "<" + element.tagName();
-        Attributes attributes = element.attributes();
-        for(Attribute attr : attributes){
-            sequence += " " + attr.getKey();
-            if(includeAttVal){
-                sequence += "=\"" + attr.getValue() + "\"";
+        if(includeAttributes){
+            Attributes attributes = element.attributes();
+            for(Attribute attr : attributes){
+                sequence += " " + attr.getKey() + "=\"" + attr.getValue() + "\"";
             }
         }
         sequence += ">";
@@ -364,7 +349,7 @@ public class Test {
             sequence += "@null";
         }
         for(Element ele : element.children()){
-            sequence += getHierarchicalSequence(ele, level-1, includeAttVal);
+            sequence += getHierarchicalSequence(ele, level-1, includeAttributes);
         }
         sequence += "</" + element.tagName() + ">";
         return sequence;
