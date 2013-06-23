@@ -51,7 +51,8 @@ public class Test {
 //        }
         
         Element element = doc.body();
-        cleanTree(element);
+        Element cpyElement = element.clone();
+        cleanTree(cpyElement);
 //        Map<String, ArrayList<Element>> sequenceMap = getSequenceMap(element, 2);
 //        Map<Element, ArrayList<String>> parentStructualMap = getParentStructualMap(sequenceMap);
 //        parentStructualMap = unionParentStructualMap(parentStructualMap, element);
@@ -65,19 +66,74 @@ public class Test {
 //            }
 //            System.out.println("*********************************");
 //        }
-        Map<Element, FreqElementAttr> feMap = getFreqElement(element);
-        Iterator<Element> iter = feMap.keySet().iterator();
-        while(iter.hasNext()){
-            Element ele = iter.next();
-            System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
-            System.out.println("Componet Size : " + feMap.get(ele).getComponentSize());
-            System.out.println("Continual Num : " + feMap.get(ele).getContinualNum());
-            for(Tag tag : feMap.get(ele).getTagList()){
-               System.out.print("Start Tag : " + tag.getName() + " "); 
+        Map<Element, FreqElementAttr> feMap = getFreqElement(cpyElement);
+        Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
+        Iterator<Element> iterEle = feMap.keySet().iterator();
+        if(feMap.size() == 1){
+            Element ele = iterEle.next();
+            Element previousEle = ele.previousElementSibling();
+            if(feMap.get(ele).getComponentSize() == 1 && previousEle != null){
+                String sequence = getVerifiedSequence(previousEle, 2, false, false);
+                ArrayList<Element> eleList = new ArrayList<>();
+                eleList.add(previousEle);
+                seqEleMap.put(sequence, eleList);
             }
-            System.out.println();
-            System.out.println("******************************");
         }
+        Map<String, ArrayList<String>> locationMarks = new HashMap<>();
+        Iterator<String> iterStr = seqEleMap.keySet().iterator();
+        while(iterStr.hasNext()){
+            ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
+            Attributes attrs = eleList.get(0).attributes();
+            String attrKey = "";
+            String attrVal = "";
+            if(attrs.size() != 0){
+                int min = Integer.MAX_VALUE;
+                for(Attribute attr : attrs){
+                    Elements elements = cpyElement.getElementsByAttributeValue(attr.getKey(), attr.getValue());
+                    if(elements.containsAll(eleList) && elements.size() < min){
+                        attrKey = attr.getKey();
+                        attrVal = attr.getValue();
+                        min = elements.size();
+                    }
+                    elements = cpyElement.getElementsByAttribute(attr.getKey());
+                    if(elements.containsAll(eleList) && elements.size() < min){
+                        attrKey = attr.getKey();
+                        attrVal = "@OnlyAttrKey@";
+                        min = elements.size();
+                    }
+                } 
+            }else{
+                attrKey = eleList.get(0).tagName();
+                attrVal = "@OnlyTagName@";
+            }
+            if(locationMarks.containsKey(attrKey)){
+                locationMarks.get(attrKey).add(attrVal);
+            }else{
+                ArrayList<String> attrValList = new ArrayList<>();
+                attrValList.add(attrVal);
+                locationMarks.put(attrKey, attrValList);
+            }
+        }
+        
+        Iterator<String> iterLoc = locationMarks.keySet().iterator();
+        while(iterLoc.hasNext()){
+            String attrKey = iterLoc.next();
+            for(String attrVal : locationMarks.get(attrKey)){
+                System.out.println(attrKey + "=\"" + attrVal + "\"");
+            }
+        }
+//        Iterator<Element> iter = feMap.keySet().iterator();
+//        while(iter.hasNext()){
+//            Element ele = iter.next();
+//            System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
+//            System.out.println("Componet Size : " + feMap.get(ele).getComponentSize());
+//            System.out.println("Continual Num : " + feMap.get(ele).getContinualNum());
+//            for(Tag tag : feMap.get(ele).getTagList()){
+//               System.out.print("Start Tag : " + tag.getName() + " "); 
+//            }
+//            System.out.println();
+//            System.out.println("******************************");
+//        }
         System.out.println(System.currentTimeMillis() - start);
         
 //        Iterator<String> keyIter = sequenceMap.keySet().iterator();
@@ -129,7 +185,22 @@ public class Test {
 //        });
 //    }
     
-    
+    public static Map<String, ArrayList<Element>> getSeqEleMap(Set<Element> elementSet, int level, boolean includeAtt, boolean includeAttVal){
+        Map<String, ArrayList<Element>> seqEleMap = new HashMap<>();
+        Iterator<Element> iter = elementSet.iterator();
+        while(iter.hasNext()){
+            Element ele = iter.next();
+            String sequence = getVerifiedSequence(ele, level, includeAtt, includeAttVal);
+            if(seqEleMap.containsKey(sequence)){
+                seqEleMap.get(sequence).add(ele);
+            }else{
+                ArrayList<Element> eleList = new ArrayList<>();
+                eleList.add(ele);
+                seqEleMap.put(sequence, eleList);
+            }
+        }
+        return seqEleMap;
+    }
     
     public static Map<Element, ArrayList<String>> getParentStructualMap(Map<String, ArrayList<Element>> sequenceMap){
         if(sequenceMap.isEmpty() || sequenceMap == null){
@@ -275,27 +346,15 @@ public class Test {
         if(feMap.size() < 2){
             return feMap;
         }
-        Map<String, ArrayList<Element>> sequenceMap = new HashMap<>();
-        Iterator<Element> iter = feMap.keySet().iterator();
-        while(iter.hasNext()){
-            Element ele = iter.next();
-            String sequence = getVerifiedSequence(ele, 2, false, false);
-            if(sequenceMap.containsKey(sequence)){
-                sequenceMap.get(sequence).add(ele);
-            }else{
-                ArrayList<Element> eleList = new ArrayList<>();
-                eleList.add(ele);
-                sequenceMap.put(sequence, eleList);
-            }
-        }
+        Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
         Set<String> sequenceDone = new HashSet<>();
-        Iterator<String> iterSeq = sequenceMap.keySet().iterator();
+        Iterator<String> iterSeq = seqEleMap.keySet().iterator();
         while(iterSeq.hasNext()){
             String sequence = iterSeq.next();
             if(sequenceDone.contains(sequence)){
                 continue;
             }
-            ArrayList<Element> eleList = sequenceMap.get(sequence);
+            ArrayList<Element> eleList = seqEleMap.get(sequence);
             Element eleParent = eleList.get(0).parent();
             while(eleParent != root){
                 if(feMap.containsKey(eleParent)){
@@ -314,7 +373,6 @@ public class Test {
             }
             sequenceDone.add(sequence);
         }
-
         return feMap;
     }
     
