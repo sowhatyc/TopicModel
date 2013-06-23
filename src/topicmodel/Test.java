@@ -26,6 +26,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
 /**
@@ -64,10 +65,18 @@ public class Test {
 //            }
 //            System.out.println("*********************************");
 //        }
-        Set<Element> freqEles = getFreqElement(element);
-        Iterator<Element> iter = freqEles.iterator();
+        Map<Element, FreqElementAttr> feMap = getFreqElement(element);
+        Iterator<Element> iter = feMap.keySet().iterator();
         while(iter.hasNext()){
-            System.out.println(getVerifiedSequence(iter.next(), 1, true));
+            Element ele = iter.next();
+            System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
+            System.out.println("Componet Size : " + feMap.get(ele).getComponentSize());
+            System.out.println("Continual Num : " + feMap.get(ele).getContinualNum());
+            for(Tag tag : feMap.get(ele).getTagList()){
+               System.out.print("Start Tag : " + tag.getName() + " "); 
+            }
+            System.out.println();
+            System.out.println("******************************");
         }
         System.out.println(System.currentTimeMillis() - start);
         
@@ -246,27 +255,70 @@ public class Test {
     }
     
     
-    public static Set<Element> getFreqElement(Element root){
-        Set<Element> freqElements = new HashSet<>();
+    public static Map<Element, FreqElementAttr> getFreqElement(Element root){
+        Map<Element, FreqElementAttr> feMap = new HashMap<>();
         List<Element> elements = new LinkedList<>();
         elements.add(root);
         while(!elements.isEmpty()){
             Element element = elements.get(0);
-            String sequence = getHierarchicalSequence(element, 1, true).replaceAll("@null", "");
-            boolean isFEle = isFreqElement(element, freqElements.contains(element.parent()));
+            String sequence = getHierarchicalSequence(element, 1, true, true).replaceAll("@null", "");
+            FreqElementAttr lfe = isFreqElement(element, feMap.containsKey(element.parent()));
             Elements childEles = element.children();
             for(Element childEle : childEles){
                 elements.add(childEle);
             }
             elements.remove(0);
-            if(isFEle){
-                freqElements.add(element);
+            if(lfe != null){
+                feMap.put(element, lfe);
             }
         }
-        return freqElements;
+        if(feMap.size() < 2){
+            return feMap;
+        }
+        Map<String, ArrayList<Element>> sequenceMap = new HashMap<>();
+        Iterator<Element> iter = feMap.keySet().iterator();
+        while(iter.hasNext()){
+            Element ele = iter.next();
+            String sequence = getVerifiedSequence(ele, 2, false, false);
+            if(sequenceMap.containsKey(sequence)){
+                sequenceMap.get(sequence).add(ele);
+            }else{
+                ArrayList<Element> eleList = new ArrayList<>();
+                eleList.add(ele);
+                sequenceMap.put(sequence, eleList);
+            }
+        }
+        Set<String> sequenceDone = new HashSet<>();
+        Iterator<String> iterSeq = sequenceMap.keySet().iterator();
+        while(iterSeq.hasNext()){
+            String sequence = iterSeq.next();
+            if(sequenceDone.contains(sequence)){
+                continue;
+            }
+            ArrayList<Element> eleList = sequenceMap.get(sequence);
+            Element eleParent = eleList.get(0).parent();
+            while(eleParent != root){
+                if(feMap.containsKey(eleParent)){
+                    if(eleList.size() < feMap.get(eleParent).getContinualNum()){
+                        for(Element ele : eleList){
+                            feMap.remove(ele);
+                        }
+                    }else{
+                        String parentSeq = getVerifiedSequence(eleParent, 2, false, false);
+                        sequenceDone.add(parentSeq);
+                        feMap.remove(eleParent);
+                    }
+                    break;
+                }
+                eleParent = eleParent.parent();
+            }
+            sequenceDone.add(sequence);
+        }
+
+        return feMap;
     }
     
-    public static boolean isFreqElement(Element element, boolean latentNodeChild){
+    public static FreqElementAttr isFreqElement(Element element, boolean latentNodeChild){
         int continualOccourence;
         if(latentNodeChild){
             continualOccourence = 2;
@@ -275,16 +327,17 @@ public class Test {
         }
         Elements childElements = element.children();
         if(childElements.size() < continualOccourence){
-            return false;
+            return null;
         }
         List<String> childEleSequence = new ArrayList<>();
         for(Element ele : childElements){
-            String sequence = getHierarchicalSequence(ele, 2, false);
+            String sequence = getHierarchicalSequence(ele, 2, false, false);
             childEleSequence.add(sequence.replaceAll("@null", ""));
         }
         int maxOccourence = 0;
-        String freqSequence = null;
-        for(int componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
+        int componetSize;
+        List<Tag> tagList = new ArrayList<>();
+        for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
             for(int i=0; i<componetSize; i++){
@@ -302,11 +355,16 @@ public class Test {
                         nextSequence += childEleSequence.get(j);
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
+                        if(occourence == 1){
+                            tagList.clear();
+                            for(int k=currentIndex; k<currentIndex+componetSize; k++){
+                                tagList.add(childElements.get(k).tag());
+                            }
+                        }
                         occourence++;
                     }else{
                         if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
                             maxOccourence = occourence;
-                            freqSequence = currentSequence;
                         }
                         occourence = 1; 
                         currentSequence = nextSequence;
@@ -316,7 +374,6 @@ public class Test {
                 }
                 if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
                     maxOccourence = occourence;
-                    freqSequence = currentSequence;
                 }
                 if(maxOccourence >= continualOccourence){
                     break;
@@ -327,9 +384,13 @@ public class Test {
             }
         }
         if(maxOccourence >= continualOccourence){
-            return true;
+            FreqElementAttr lfe = new FreqElementAttr();
+            lfe.setComponentSize(componetSize);
+            lfe.setContinualNum(maxOccourence);
+            lfe.setTagList(tagList);
+            return lfe;
         }else{
-            return false;
+            return null;
         }
     }
     
@@ -346,7 +407,7 @@ public class Test {
             if(ele == eleRoot){
                 continue;
             }
-            String sequence = getVerifiedSequence(ele, level, false);
+            String sequence = getVerifiedSequence(ele, level, false, false);
             if(sequence == null){
                 continue;
             }
@@ -361,8 +422,8 @@ public class Test {
         return sequenceMap;
     }
     
-    public static String getVerifiedSequence(Element element, int level, boolean includeAttVal){
-        String sequence = getHierarchicalSequence(element, level, includeAttVal);
+    public static String getVerifiedSequence(Element element, int level, boolean includeAtt, boolean includeAttVal){
+        String sequence = getHierarchicalSequence(element, level, includeAtt, includeAttVal);
         int emptyNodeNum = 0;
         int startIndex = 0;
         int findIndex = -1;
@@ -377,15 +438,18 @@ public class Test {
         }
     }
     
-    public static String getHierarchicalSequence(Element element, int level, boolean includeAttributes){
+    public static String getHierarchicalSequence(Element element, int level, boolean includeAtt, boolean includeAttVal){
         if(level <= 0){
             return "";
         }
         String sequence = "<" + element.tagName();
-        if(includeAttributes){
+        if(includeAtt){
             Attributes attributes = element.attributes();
             for(Attribute attr : attributes){
-                sequence += " " + attr.getKey() + "=\"" + attr.getValue() + "\"";
+                sequence += " " + attr.getKey();
+                if(includeAttVal){
+                    sequence += "=\"" + attr.getValue() + "\"";
+                }
             }
         }
         sequence += ">";
@@ -393,7 +457,7 @@ public class Test {
             sequence += "@null";
         }
         for(Element ele : element.children()){
-            sequence += getHierarchicalSequence(ele, level-1, includeAttributes);
+            sequence += getHierarchicalSequence(ele, level-1, includeAtt, includeAttVal);
         }
         sequence += "</" + element.tagName() + ">";
         return sequence;
