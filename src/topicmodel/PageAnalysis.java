@@ -5,6 +5,7 @@
 package topicmodel;
 
 import Utils.StaticLib;
+import Utils.Storage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,27 +40,25 @@ public class PageAnalysis {
         boolean success = true;
         if(extractorRules == null){
             try {
-                Document doc = Jsoup.parse(new File(StaticLib.extractorRulesPath), "utf-8"); 
+                File file = new File(StaticLib.extractorRulesPath);
+                file.createNewFile();
+                Document doc = Jsoup.parse(file, "utf-8"); 
                 extractorRules = new HashMap<>();
                 Elements domainEles = doc.getElementsByTag("domainname");
                 for(Element domainEle : domainEles){
                     String domainName = domainEle.ownText();
-                    Elements typeElements = domainEle.getElementsByTag("type");
-                    for(Element typeEle : typeElements){
-                        String type = typeEle.ownText();
-                        FreqElementAttr fea = new FreqElementAttr();
-                        fea.setComponentSize(Integer.valueOf(typeEle.getElementsByTag("componentSize").first().ownText()));
-                        fea.setContinualNum(Integer.valueOf(typeEle.getElementsByTag("continualnum").first().ownText()));
-                        fea.setAttrKey(typeEle.getElementsByTag("attrkey").first().ownText());
-                        fea.setAttrVal(typeEle.getElementsByTag("attrval").first().ownText());
-                        List<String> startElementInfo = new ArrayList<>();
-                        Elements startInfoEles = typeEle.getElementsByTag("eleinfo");
-                        for(Element infoEle : startInfoEles){
-                            startElementInfo.add(infoEle.ownText());
-                        }
-                        fea.setStartElementsInfo(startElementInfo);
-                        extractorRules.put(domainName+type, fea);
+                    FreqElementAttr fea = new FreqElementAttr();
+                    fea.setComponentSize(Integer.valueOf(domainEle.getElementsByTag("componentSize").first().ownText()));
+                    fea.setContinualNum(Integer.valueOf(domainEle.getElementsByTag("continualnum").first().ownText()));
+                    fea.setAttrKey(domainEle.getElementsByTag("attrkey").first().ownText());
+                    fea.setAttrVal(domainEle.getElementsByTag("attrval").first().ownText());
+                    List<String> startElementInfo = new ArrayList<>();
+                    Elements startInfoEles = domainEle.getElementsByTag("eleinfo");
+                    for(Element infoEle : startInfoEles){
+                        startElementInfo.add(infoEle.ownText());
                     }
+                    fea.setStartElementsInfo(startElementInfo);
+                    extractorRules.put(domainName, fea);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(PageAnalysis.class.getName()).log(Level.SEVERE, null, ex);
@@ -69,19 +68,61 @@ public class PageAnalysis {
         return success;
     }
 //    
-//    public boolean analyzePage(String content, String baseUrl){
-//        boolean success = true;
-//        Document doc = Jsoup.parse(content, baseUrl);
-//        Element element = doc.body();
-//        cleanTree(element);
-//        Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(element);
-//        
-//    }
+    public FreqElementAttr analyzePage(String content, String url, boolean isListPage){
+        boolean success = true;
+        if(!initialExtractorRule()){
+            System.err.println("Initial Extractor Rules Failed!!!");
+            return null;
+        }
+        String baseUrl = StaticLib.getBaseUrl(url);
+        if(baseUrl == null){
+            System.err.println("The url is not Correct!!");
+            return null;
+        }
+        String type = "";
+        if(isListPage){
+            type = "listpage";
+        }else{
+            type = "contentpage";
+        }
+        if(!extractorRules.containsKey(baseUrl+type)){
+            Document doc = Jsoup.parse(content, baseUrl);
+            Element element = doc.body();
+            cleanTree(element);
+            Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(element);
+            if(eleInfo == null){
+                return null;
+            }
+            Iterator<Element> iter = eleInfo.keySet().iterator();
+            Element friEle = iter.next();
+            FreqElementAttr fea = eleInfo.get(friEle);
+            String entry = "<domainName>" + baseUrl + type;
+            entry += "<componentSize>" + fea.getComponentSize() + "</componentSize>";
+            entry += "<continualNum>" + fea.getContinualNum() + "</continualNum>";
+            entry += "<attrKey>" + fea.getAttrKey() + "</attrKey>";
+            entry += "<attrVal>" + fea.getAttrVal() + "</attrVal>";
+            for(String startEleInfo : fea.getStartElementsInfo()){
+                entry += "<eleInfo>" + startEleInfo + "</eleInfo>";
+            }
+            entry += "</domainName>\n";
+            if(!new Storage().saveFile(StaticLib.extractorRulesPath, entry, true)){
+                System.err.println("Save File Failed!!!");
+                return null;
+            }
+            extractorRules.put(baseUrl+type, fea);
+            return fea;
+        }else{
+            System.out.println("Already exist!");
+            return extractorRules.get(baseUrl+type);
+        }
+    }
     
     private Map<Element, FreqElementAttr> getFreqEleInfo(Element cleanTreeRoot){
         Map<Element, FreqElementAttr> feMap = getFreqElement(cleanTreeRoot);
         Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
         Iterator<String> iterStr = seqEleMap.keySet().iterator();
+        int maxCount = 0;
+        Element maxEle = null;
         while(iterStr.hasNext()){
             ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
             Attributes attrs = eleList.get(0).attributes();
@@ -111,9 +152,25 @@ public class PageAnalysis {
             }
             feMap.get(eleList.get(0)).setAttrKey(attrKey);
             feMap.get(eleList.get(0)).setAttrVal(attrVal);
+            int size = feMap.get(eleList.get(0)).getContinualNum() * eleList.size();
+            feMap.get(eleList.get(0)).setContinualNum(size);
+            if(size > maxCount){
+                maxCount = size;
+                maxEle = eleList.get(0);
+            }
             for(int i=1; i<eleList.size(); i++){
                 feMap.remove(eleList.get(i));
             }
+        }
+        List<Element> eleList = new ArrayList<>(feMap.keySet());
+        for(Element ele : eleList){
+            if(ele != maxEle){
+                feMap.remove(ele);
+            }
+        }
+        if(feMap.size() != 1){
+            System.err.println("Something Wrong!");
+            return null;
         }
         return feMap;
     }
@@ -123,19 +180,19 @@ public class PageAnalysis {
         if(feMap.size() > 1){
             feMap = getFilteredFreqElement(feMap, root);
         }
-        List<Element> eleList = new ArrayList<>(feMap.keySet());
-        for(Element ele : eleList){
-            Element previousEle = ele.previousElementSibling();
-            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
-                FreqElementAttr fea = new FreqElementAttr();
-                fea.setComponentSize(1);
-                fea.setContinualNum(1);
-                List<String> startElementInfo = new ArrayList<>();
-                startElementInfo.add("@null");
-                fea.setStartElementsInfo(startElementInfo);
-                feMap.put(previousEle, fea);
-            }
-        }
+//        List<Element> eleList = new ArrayList<>(feMap.keySet());
+//        for(Element ele : eleList){
+//            Element previousEle = ele.previousElementSibling();
+//            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
+//                FreqElementAttr fea = new FreqElementAttr();
+//                fea.setComponentSize(1);
+//                fea.setContinualNum(1);
+//                List<String> startElementInfo = new ArrayList<>();
+//                startElementInfo.add("@null");
+//                fea.setStartElementsInfo(startElementInfo);
+//                feMap.put(previousEle, fea);
+//            }
+//        }
         return feMap;
     }
     
@@ -168,6 +225,7 @@ public class PageAnalysis {
             }
             sequenceDone.add(sequence);
         }
+        
         return feMap;
     }
     

@@ -43,22 +43,22 @@ public class Test {
             //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
             //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
                     String url = "http://bbs.tianya.cn/list-828-1.shtml";
-            //        String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
-            //        String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
-            //        String url = "http://tieba.baidu.com/p/2284182563";
-            //        String url = "http://bbs.anzhi.com/forum-1020-1.html";
-            //        String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
+//                    String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
+//                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
+//                    String url = "http://tieba.baidu.com/p/2284182563";
+//                    String url = "http://bbs.gfan.com/forum-1260-1.html";
+//                    String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
-                    long start = System.currentTimeMillis();
-                    Document doc = Jsoup.parse(retVal[1], url);
+//                    long start = System.currentTimeMillis();
+//                    Document doc = Jsoup.parse(retVal[1], url);
 //                    Elements elements = doc.getElementsByTag("body");
             //        for(Element element : elements){
             //            if(element.)
             //        }
                     
-                    Element element = doc.body();
-                    Element cpyElement = element.clone();
-                    cleanTree(cpyElement);
+//                    Element element = doc.body();
+//                    Element cpyElement = element.clone();
+//                    cleanTree(cpyElement);
             //        Map<String, ArrayList<Element>> sequenceMap = getSequenceMap(element, 2);
             //        Map<Element, ArrayList<String>> parentStructualMap = getParentStructualMap(sequenceMap);
             //        parentStructualMap = unionParentStructualMap(parentStructualMap, element);
@@ -72,7 +72,7 @@ public class Test {
             //            }
             //            System.out.println("*********************************");
             //        }
-                    Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(cpyElement);
+//                    Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(cpyElement);
             //        Iterator<String> iterLoc = locationMarks.keySet().iterator();
             //        while(iterLoc.hasNext()){
             //            String attrKey = iterLoc.next();
@@ -81,24 +81,24 @@ public class Test {
             //                System.out.println(attrKey + "=\"" + iterVal.next() + "\"");
             //            }
             //        }
-                    Iterator<Element> iter = eleInfo.keySet().iterator();
-                    while(iter.hasNext()){
-                        Element ele = iter.next();
-                        System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
-                        System.out.println("Componet Size : " + eleInfo.get(ele).getComponentSize());
-                        System.out.println("Continual Num : " + eleInfo.get(ele).getContinualNum());
-                        System.out.println("AttrKey : " + eleInfo.get(ele).getAttrKey());
-                        System.out.println("AttrVal : " + eleInfo.get(ele).getAttrVal());
-                        if(eleInfo.get(ele).getStartElementsInfo() != null){
-                            System.out.println("Start Ele Info: ");
-                            for(String startInfo : eleInfo.get(ele).getStartElementsInfo()){
-                                System.out.println(startInfo); 
-                            }
-                        }
-                        System.out.println();
-                        System.out.println("******************************");
-                    }
-                    System.out.println(System.currentTimeMillis() - start);
+//                    Iterator<Element> iter = eleInfo.keySet().iterator();
+//                    while(iter.hasNext()){
+//                        Element ele = iter.next();
+//                        System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
+//                        System.out.println("Componet Size : " + eleInfo.get(ele).getComponentSize());
+//                        System.out.println("Continual Num : " + eleInfo.get(ele).getContinualNum());
+//                        System.out.println("AttrKey : " + eleInfo.get(ele).getAttrKey());
+//                        System.out.println("AttrVal : " + eleInfo.get(ele).getAttrVal());
+//                        if(eleInfo.get(ele).getStartElementsInfo() != null){
+//                            System.out.println("Start Ele Info: ");
+//                            for(String startInfo : eleInfo.get(ele).getStartElementsInfo()){
+//                                System.out.println(startInfo); 
+//                            }
+//                        }
+//                        System.out.println();
+//                        System.out.println("******************************");
+//                    }
+//                    System.out.println(System.currentTimeMillis() - start);
                     
             //        Iterator<String> keyIter = sequenceMap.keySet().iterator();
             //        while(keyIter.hasNext()){
@@ -133,31 +133,26 @@ public class Test {
 //            Elements elements = doc.getElementsByTag("domainname");
 //            for(Element ele : elements){
 //                String domainName = ele.ownText();
-//                Elements typeElements = ele.getElementsByTag("type");
-//                for(Element innerEle : typeElements){
-//                    String type = innerEle.ownText();
-//                    String componentSize = innerEle.getElementsByTag("componentSize").first().ownText();
-//                    String continualnum = innerEle.getElementsByTag("continualnum").first().ownText();
-//                    String attrkey = innerEle.getElementsByTag("attrkey").first().ownText();
-//                    String attrval = innerEle.getElementsByTag("attrval").first().ownText();
-//                    Elements startInfoEles = innerEle.getElementsByTag("eleinfo");
-//                    for(Element infoEle : startInfoEles){
-//                        String eleInfo = infoEle.ownText();
-//                        System.out.println("domainName : " + domainName);
-//                        System.out.println("type : " + type);
-//                        System.out.println("componentSize : " + componentSize);
-//                        System.out.println("continualnum : " + continualnum);
-//                        System.out.println("attrkey : " + attrkey);
-//                        System.out.println("attrval : " + attrval);
-//                        System.out.println("eleInfo : " + eleInfo);
-//                    }
-//                    
+//                String componentSize = ele.getElementsByTag("componentSize").first().ownText();
+//                String continualnum = ele.getElementsByTag("continualnum").first().ownText();
+//                String attrkey = ele.getElementsByTag("attrkey").first().ownText();
+//                String attrval = ele.getElementsByTag("attrval").first().ownText();
+//                Elements startInfoEles = ele.getElementsByTag("eleinfo");
+//                System.out.println("domainName : " + domainName);
+//                System.out.println("componentSize : " + componentSize);
+//                System.out.println("continualnum : " + continualnum);
+//                System.out.println("attrkey : " + attrkey);
+//                System.out.println("attrval : " + attrval);
+//                for(Element infoEle : startInfoEles){
+//                    String eleInfo = infoEle.ownText();
+//                    System.out.println("eleInfo : " + eleInfo);
 //                }
 //            }
-//            
 //        } catch (IOException ex) {
 //            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
 //        }
+        PageAnalysis pa = new PageAnalysis();
+        FreqElementAttr fea = pa.analyzePage(retVal[1], url, true);
     }
     
     
@@ -166,6 +161,8 @@ public class Test {
         Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
 //        Map<String, Set<String>> locationMarks = new HashMap<>();
         Iterator<String> iterStr = seqEleMap.keySet().iterator();
+        int maxCount = 0;
+        Element maxEle = null;
         while(iterStr.hasNext()){
             ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
             Attributes attrs = eleList.get(0).attributes();
@@ -195,9 +192,24 @@ public class Test {
             }
             feMap.get(eleList.get(0)).setAttrKey(attrKey);
             feMap.get(eleList.get(0)).setAttrVal(attrVal);
+            int size = feMap.get(eleList.get(0)).getContinualNum() * eleList.size();
+            feMap.get(eleList.get(0)).setContinualNum(size);
+            if(size > maxCount){
+                maxCount = size;
+                maxEle = eleList.get(0);
+            }
             for(int i=1; i<eleList.size(); i++){
                 feMap.remove(eleList.get(i));
             }
+        }
+        List<Element> eleList = new ArrayList<>(feMap.keySet());
+        for(Element ele : eleList){
+            if(ele != maxEle){
+                feMap.remove(ele);
+            }
+        }
+        if(feMap.size() != 1){
+            System.err.println("Something Wrong!");
         }
         return feMap;
     }
@@ -399,19 +411,19 @@ public class Test {
         if(feMap.size() > 1){
             feMap = getFilteredFreqElement(feMap, root);
         }
-        List<Element> eleList = new ArrayList<>(feMap.keySet());
-        for(Element ele : eleList){
-            Element previousEle = ele.previousElementSibling();
-            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
-                FreqElementAttr fea = new FreqElementAttr();
-                fea.setComponentSize(1);
-                fea.setContinualNum(1);
-                List<String> startElementInfo = new ArrayList<>();
-                startElementInfo.add("@null");
-                fea.setStartElementsInfo(startElementInfo);
-                feMap.put(previousEle, fea);
-            }
-        }
+//        List<Element> eleList = new ArrayList<>(feMap.keySet());
+//        for(Element ele : eleList){
+//            Element previousEle = ele.previousElementSibling();
+//            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
+//                FreqElementAttr fea = new FreqElementAttr();
+//                fea.setComponentSize(1);
+//                fea.setContinualNum(1);
+//                List<String> startElementInfo = new ArrayList<>();
+//                startElementInfo.add("@null");
+//                fea.setStartElementsInfo(startElementInfo);
+//                feMap.put(previousEle, fea);
+//            }
+//        }
         return feMap;
     }
     

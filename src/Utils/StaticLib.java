@@ -29,5 +29,17 @@ public class StaticLib {
         tagSet.add("th");
     }
     
+    public static String getBaseUrl(String url){
+        if(url.startsWith("http://")){
+            int slashIndex = url.indexOf("/", 7);
+            if(slashIndex == -1){
+                return url + "/";
+            }else{
+                return url.substring(0, slashIndex+1);
+            }
+        }else{
+            return null;
+        }
+    }
     
 }
