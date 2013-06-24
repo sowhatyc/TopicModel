@@ -35,19 +35,39 @@ public class PageAnalysis {
 //    Map<Element, FreqElementAttr> eleInfo;
     private static Map<String, FreqElementAttr> extractorRules = null;
     
-//    public static boolean initialExtractorRule(){
-//        boolean success = true;
-//        if(extractorRules == null){
-//            try {
-//                Document doc = Jsoup.parse(new File(StaticLib.extractorRulesPath), "utf-8"); 
-//                extractorRules = new HashMap<>();
-//                doc.
-//            } catch (IOException ex) {
-//                Logger.getLogger(PageAnalysis.class.getName()).log(Level.SEVERE, null, ex);
-//                success = false;
-//            }
-//        }
-//    }
+    public static boolean initialExtractorRule(){
+        boolean success = true;
+        if(extractorRules == null){
+            try {
+                Document doc = Jsoup.parse(new File(StaticLib.extractorRulesPath), "utf-8"); 
+                extractorRules = new HashMap<>();
+                Elements domainEles = doc.getElementsByTag("domainname");
+                for(Element domainEle : domainEles){
+                    String domainName = domainEle.ownText();
+                    Elements typeElements = domainEle.getElementsByTag("type");
+                    for(Element typeEle : typeElements){
+                        String type = typeEle.ownText();
+                        FreqElementAttr fea = new FreqElementAttr();
+                        fea.setComponentSize(Integer.valueOf(typeEle.getElementsByTag("componentSize").first().ownText()));
+                        fea.setContinualNum(Integer.valueOf(typeEle.getElementsByTag("continualnum").first().ownText()));
+                        fea.setAttrKey(typeEle.getElementsByTag("attrkey").first().ownText());
+                        fea.setAttrVal(typeEle.getElementsByTag("attrval").first().ownText());
+                        List<String> startElementInfo = new ArrayList<>();
+                        Elements startInfoEles = typeEle.getElementsByTag("eleinfo");
+                        for(Element infoEle : startInfoEles){
+                            startElementInfo.add(infoEle.ownText());
+                        }
+                        fea.setStartElementsInfo(startElementInfo);
+                        extractorRules.put(domainName+type, fea);
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(PageAnalysis.class.getName()).log(Level.SEVERE, null, ex);
+                success = false;
+            }
+        }
+        return success;
+    }
 //    
 //    public boolean analyzePage(String content, String baseUrl){
 //        boolean success = true;
@@ -79,7 +99,7 @@ public class PageAnalysis {
                     elements = cleanTreeRoot.getElementsByAttribute(attr.getKey());
                     if(elements.containsAll(eleList) && elements.size() < min){
                         attrKey = attr.getKey();
-                        attrVal = "@OnlyAttrKey@";
+                        attrVal = "@OnlyAttrKey";
                         min = elements.size();
                     }
                 } 
@@ -87,7 +107,7 @@ public class PageAnalysis {
             Elements elements = cleanTreeRoot.getElementsByTag(eleList.get(0).tagName());
             if(elements.containsAll(eleList) && elements.size() < min){
                 attrKey = eleList.get(0).tagName();
-                attrVal = "@OnlyTagName@";
+                attrVal = "@OnlyTagName";
             }
             feMap.get(eleList.get(0)).setAttrKey(attrKey);
             feMap.get(eleList.get(0)).setAttrVal(attrVal);
@@ -110,7 +130,9 @@ public class PageAnalysis {
                 FreqElementAttr fea = new FreqElementAttr();
                 fea.setComponentSize(1);
                 fea.setContinualNum(1);
-                fea.setStartElementsInfo(null);
+                List<String> startElementInfo = new ArrayList<>();
+                startElementInfo.add("@null");
+                fea.setStartElementsInfo(startElementInfo);
                 feMap.put(previousEle, fea);
             }
         }
@@ -228,11 +250,10 @@ public class PageAnalysis {
                             String info = "";
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
                                 Element eleInfo = childElements.get(k);
-                                info = "\"" + eleInfo.tagName();
+                                info = "@" + eleInfo.tagName();
                                 for(Attribute attr : eleInfo.attributes()){
                                     info += " " + attr.getKey();
                                 }
-                                info += "\"";
                             }
                             startElementsInfo.add(info);
                         }
