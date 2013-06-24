@@ -110,7 +110,7 @@ public class PageAnalysis {
                 FreqElementAttr fea = new FreqElementAttr();
                 fea.setComponentSize(1);
                 fea.setContinualNum(1);
-                fea.setStartElements(null);
+                fea.setStartElementsInfo(null);
                 feMap.put(previousEle, fea);
             }
         }
@@ -204,7 +204,7 @@ public class PageAnalysis {
         }
         int maxOccourence = 0;
         int componetSize;
-        List<Element> elementList = new ArrayList<>();
+        List<String> startElementsInfo = new ArrayList<>();
         for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
@@ -224,10 +224,17 @@ public class PageAnalysis {
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
                         if(occourence == 1){
-                            elementList.clear();
+                            startElementsInfo.clear();
+                            String info = "";
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
-                                elementList.add(childElements.get(k));
+                                Element eleInfo = childElements.get(k);
+                                info = "\"" + eleInfo.tagName();
+                                for(Attribute attr : eleInfo.attributes()){
+                                    info += " " + attr.getKey();
+                                }
+                                info += "\"";
                             }
+                            startElementsInfo.add(info);
                         }
                         occourence++;
                     }else{
@@ -255,7 +262,7 @@ public class PageAnalysis {
             FreqElementAttr lfe = new FreqElementAttr();
             lfe.setComponentSize(componetSize);
             lfe.setContinualNum(maxOccourence);
-            lfe.setStartElements(elementList);
+            lfe.setStartElementsInfo(startElementsInfo);
             return lfe;
         }else{
             return null;

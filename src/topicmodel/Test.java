@@ -41,9 +41,9 @@ public class Test {
 //        String url = "http://bbs.tianya.cn/list-828-1.shtml";
 //        String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
 //        String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
-//        String url = "http://tieba.baidu.com/p/2284182563";
+        String url = "http://tieba.baidu.com/p/2284182563";
 //        String url = "http://bbs.anzhi.com/forum-1020-1.html";
-        String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
+//        String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
         String retVal[] = new WebCrawler().getContent(url);
         long start = System.currentTimeMillis();
         Document doc = Jsoup.parse(retVal[1], url);
@@ -85,9 +85,10 @@ public class Test {
             System.out.println("Continual Num : " + eleInfo.get(ele).getContinualNum());
             System.out.println("AttrKey : " + eleInfo.get(ele).getAttrKey());
             System.out.println("AttrVal : " + eleInfo.get(ele).getAttrVal());
-            if(eleInfo.get(ele).getStartElements() != null){
-                for(Element startEle : eleInfo.get(ele).getStartElements()){
-                    System.out.print("Start Tag : " + startEle.tagName() + " "); 
+            if(eleInfo.get(ele).getStartElementsInfo() != null){
+                System.out.println("Start Ele Info: ");
+                for(String startInfo : eleInfo.get(ele).getStartElementsInfo()){
+                    System.out.println(startInfo); 
                 }
             }
             System.out.println();
@@ -371,7 +372,7 @@ public class Test {
                 FreqElementAttr fea = new FreqElementAttr();
                 fea.setComponentSize(1);
                 fea.setContinualNum(1);
-                fea.setStartElements(null);
+                fea.setStartElementsInfo(null);
                 feMap.put(previousEle, fea);
             }
         }
@@ -396,7 +397,7 @@ public class Test {
         }
         int maxOccourence = 0;
         int componetSize;
-        List<Element> elementList = new ArrayList<>();
+        List<String> startElementsInfo = new ArrayList<>();
         for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
@@ -416,10 +417,17 @@ public class Test {
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
                         if(occourence == 1){
-                            elementList.clear();
+                            startElementsInfo.clear();
+                            String info = "";
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
-                                elementList.add(childElements.get(k));
+                                Element eleInfo = childElements.get(k);
+                                info = "\"" + eleInfo.tagName();
+                                for(Attribute attr : eleInfo.attributes()){
+                                    info += " " + attr.getKey();
+                                }
+                                info += "\"";
                             }
+                            startElementsInfo.add(info);
                         }
                         occourence++;
                     }else{
@@ -447,7 +455,7 @@ public class Test {
             FreqElementAttr lfe = new FreqElementAttr();
             lfe.setComponentSize(componetSize);
             lfe.setContinualNum(maxOccourence);
-            lfe.setStartElements(elementList);
+            lfe.setStartElementsInfo(startElementsInfo);
             return lfe;
         }else{
             return null;

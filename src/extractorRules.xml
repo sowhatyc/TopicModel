@@ -1,0 +1,8 @@
+<domainName>http://bbs.tianya.cn/
+<type>listPage
+<componentSize>1</componentSize>
+<continualNum>10</continualNum>
+<attrKey>id</attrKey>
+<attrVal>postlist</attrVal>
+<startEleInfo>
+<eleInfo></span>
