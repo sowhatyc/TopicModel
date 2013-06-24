@@ -16,8 +16,7 @@ public class FreqElementAttr {
     
     private int componentSize;
     private int continualNum;
-    private List<Tag> tagList;
-
+    private List<Element> startElements;
 
     /**
      * @return the componentSize
@@ -48,18 +47,19 @@ public class FreqElementAttr {
     }
 
     /**
-     * @return the tagList
+     * @return the startElements
      */
-    public List<Tag> getTagList() {
-        return tagList;
+    public List<Element> getStartElements() {
+        return startElements;
     }
 
     /**
-     * @param tagList the tagList to set
+     * @param startElements the startElements to set
      */
-    public void setTagList(List<Tag> tagList) {
-        this.tagList = tagList;
+    public void setStartElements(List<Element> startElements) {
+        this.startElements = startElements;
     }
+
 
     
 }

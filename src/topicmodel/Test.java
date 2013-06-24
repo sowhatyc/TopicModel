@@ -125,17 +125,6 @@ public class Test {
     public static Map<String, Set<String>> getLocationMarks(Element cleanTreeRoot){
         Map<Element, FreqElementAttr> feMap = getFreqElement(cleanTreeRoot);
         Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
-        Iterator<Element> iterEle = feMap.keySet().iterator();
-        while(iterEle.hasNext()){
-            Element ele = iterEle.next();
-            Element previousEle = ele.previousElementSibling();
-            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
-                String sequence = getVerifiedSequence(previousEle, 2, false, false);
-                ArrayList<Element> eleList = new ArrayList<>();
-                eleList.add(previousEle);
-                seqEleMap.put(sequence, eleList);
-            }
-        }
         Map<String, Set<String>> locationMarks = new HashMap<>();
         Iterator<String> iterStr = seqEleMap.keySet().iterator();
         while(iterStr.hasNext()){
@@ -317,13 +306,13 @@ public class Test {
     }
     
     
-    public static Map<Element, FreqElementAttr> getFreqElement(Element root){
+    public static Map<Element, FreqElementAttr> getLatentFreqElement(Element root){
         Map<Element, FreqElementAttr> feMap = new HashMap<>();
         List<Element> elements = new LinkedList<>();
         elements.add(root);
         while(!elements.isEmpty()){
             Element element = elements.get(0);
-            String sequence = getHierarchicalSequence(element, 1, true, true).replaceAll("@null", "");
+//            String sequence = getHierarchicalSequence(element, 1, true, true).replaceAll("@null", "");
             FreqElementAttr lfe = isFreqElement(element, feMap.containsKey(element.parent()));
             Elements childEles = element.children();
             for(Element childEle : childEles){
@@ -334,9 +323,10 @@ public class Test {
                 feMap.put(element, lfe);
             }
         }
-        if(feMap.size() < 2){
-            return feMap;
-        }
+        return feMap;
+    }
+    
+    public static Map<Element, FreqElementAttr> getFilteredFreqElement(Map<Element, FreqElementAttr> feMap, Element root){
         Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
         Set<String> sequenceDone = new HashSet<>();
         Iterator<String> iterSeq = seqEleMap.keySet().iterator();
@@ -367,6 +357,25 @@ public class Test {
         return feMap;
     }
     
+    public static Map<Element, FreqElementAttr> getFreqElement(Element root){
+        Map<Element, FreqElementAttr> feMap  = getLatentFreqElement(root);
+        if(feMap.size() > 1){
+            feMap = getFilteredFreqElement(feMap, root);
+        }
+        List<Element> eleList = new ArrayList<>(feMap.keySet());
+        for(Element ele : eleList){
+            Element previousEle = ele.previousElementSibling();
+            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
+                FreqElementAttr fea = new FreqElementAttr();
+                fea.setComponentSize(1);
+                fea.setContinualNum(1);
+                fea.setStartElements(null);
+                feMap.put(previousEle, fea);
+            }
+        }
+        return feMap;
+    }
+    
     public static FreqElementAttr isFreqElement(Element element, boolean latentNodeChild){
         int continualOccourence;
         if(latentNodeChild){
@@ -385,7 +394,7 @@ public class Test {
         }
         int maxOccourence = 0;
         int componetSize;
-        List<Tag> tagList = new ArrayList<>();
+        List<Element> elementList = new ArrayList<>();
         for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
@@ -405,9 +414,9 @@ public class Test {
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
                         if(occourence == 1){
-                            tagList.clear();
+                            elementList.clear();
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
-                                tagList.add(childElements.get(k).tag());
+                                elementList.add(childElements.get(k));
                             }
                         }
                         occourence++;
@@ -436,7 +445,7 @@ public class Test {
             FreqElementAttr lfe = new FreqElementAttr();
             lfe.setComponentSize(componetSize);
             lfe.setContinualNum(maxOccourence);
-            lfe.setTagList(tagList);
+            lfe.setStartElements(elementList);
             return lfe;
         }else{
             return null;
