@@ -38,10 +38,12 @@ public class Test {
     public static void main(String args[]){
 //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
 //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
-//        String url = "http://bbs.tianya.cn/list-develop-1.shtml";
-//        String url = "http://bbs.tianya.cn/post-develop-1347012-1.shtml";
-//        String url = "http://tieba.baidu.com/f?kw=%B1%F6%B5%C3k5";
-        String url = "http://tieba.baidu.com/p/2406389471";
+//        String url = "http://bbs.tianya.cn/list-828-1.shtml";
+//        String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
+//        String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
+//        String url = "http://tieba.baidu.com/p/2284182563";
+//        String url = "http://bbs.anzhi.com/forum-1020-1.html";
+        String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
         String retVal[] = new WebCrawler().getContent(url);
         long start = System.currentTimeMillis();
         Document doc = Jsoup.parse(retVal[1], url);
@@ -66,60 +68,13 @@ public class Test {
 //            }
 //            System.out.println("*********************************");
 //        }
-        Map<Element, FreqElementAttr> feMap = getFreqElement(cpyElement);
-        Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
-        Iterator<Element> iterEle = feMap.keySet().iterator();
-        if(feMap.size() == 1){
-            Element ele = iterEle.next();
-            Element previousEle = ele.previousElementSibling();
-            if(feMap.get(ele).getComponentSize() == 1 && previousEle != null){
-                String sequence = getVerifiedSequence(previousEle, 2, false, false);
-                ArrayList<Element> eleList = new ArrayList<>();
-                eleList.add(previousEle);
-                seqEleMap.put(sequence, eleList);
-            }
-        }
-        Map<String, ArrayList<String>> locationMarks = new HashMap<>();
-        Iterator<String> iterStr = seqEleMap.keySet().iterator();
-        while(iterStr.hasNext()){
-            ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
-            Attributes attrs = eleList.get(0).attributes();
-            String attrKey = "";
-            String attrVal = "";
-            if(attrs.size() != 0){
-                int min = Integer.MAX_VALUE;
-                for(Attribute attr : attrs){
-                    Elements elements = cpyElement.getElementsByAttributeValue(attr.getKey(), attr.getValue());
-                    if(elements.containsAll(eleList) && elements.size() < min){
-                        attrKey = attr.getKey();
-                        attrVal = attr.getValue();
-                        min = elements.size();
-                    }
-                    elements = cpyElement.getElementsByAttribute(attr.getKey());
-                    if(elements.containsAll(eleList) && elements.size() < min){
-                        attrKey = attr.getKey();
-                        attrVal = "@OnlyAttrKey@";
-                        min = elements.size();
-                    }
-                } 
-            }else{
-                attrKey = eleList.get(0).tagName();
-                attrVal = "@OnlyTagName@";
-            }
-            if(locationMarks.containsKey(attrKey)){
-                locationMarks.get(attrKey).add(attrVal);
-            }else{
-                ArrayList<String> attrValList = new ArrayList<>();
-                attrValList.add(attrVal);
-                locationMarks.put(attrKey, attrValList);
-            }
-        }
-        
+        Map<String, Set<String>> locationMarks = getLocationMarks(cpyElement);
         Iterator<String> iterLoc = locationMarks.keySet().iterator();
         while(iterLoc.hasNext()){
             String attrKey = iterLoc.next();
-            for(String attrVal : locationMarks.get(attrKey)){
-                System.out.println(attrKey + "=\"" + attrVal + "\"");
+            Iterator<String> iterVal = locationMarks.get(attrKey).iterator();
+            while(iterVal.hasNext()){
+                System.out.println(attrKey + "=\"" + iterVal.next() + "\"");
             }
         }
 //        Iterator<Element> iter = feMap.keySet().iterator();
@@ -166,24 +121,60 @@ public class Test {
 //        }
     }
     
-//    public static List<String> getOrderedSequenceList(Map<String, ArrayList<Element>> sequenceMap){
-//        if(sequenceMap.isEmpty() || sequenceMap == null){
-//            return null;
-//        }
-//        List<String> orderedSequenceList = new ArrayList<>();
-//        Iterator<String> iter = sequenceMap.keySet().iterator();
-//        while(iter.hasNext()){
-//            orderedSequenceList.add(iter.next());
-//        }
-//        Collections.sort(orderedSequenceList, new Comparator<String>() {
-//
-//            @Override
-//            public int compare(String o1, String o2) {
-////                throw new UnsupportedOperationException("Not supported yet.");
-//                return sequenceMap.get(o2).size() - sequenceMap.get(o1).size();
-//            }
-//        });
-//    }
+    
+    public static Map<String, Set<String>> getLocationMarks(Element cleanTreeRoot){
+        Map<Element, FreqElementAttr> feMap = getFreqElement(cleanTreeRoot);
+        Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
+        Iterator<Element> iterEle = feMap.keySet().iterator();
+        while(iterEle.hasNext()){
+            Element ele = iterEle.next();
+            Element previousEle = ele.previousElementSibling();
+            if(!feMap.containsKey(previousEle) && previousEle != null  && feMap.get(ele).getComponentSize() == 1){
+                String sequence = getVerifiedSequence(previousEle, 2, false, false);
+                ArrayList<Element> eleList = new ArrayList<>();
+                eleList.add(previousEle);
+                seqEleMap.put(sequence, eleList);
+            }
+        }
+        Map<String, Set<String>> locationMarks = new HashMap<>();
+        Iterator<String> iterStr = seqEleMap.keySet().iterator();
+        while(iterStr.hasNext()){
+            ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
+            Attributes attrs = eleList.get(0).attributes();
+            String attrKey = "";
+            String attrVal = "";
+            int min = Integer.MAX_VALUE;
+            if(attrs.size() != 0){
+                for(Attribute attr : attrs){
+                    Elements elements = cleanTreeRoot.getElementsByAttributeValue(attr.getKey(), attr.getValue());
+                    if(elements.containsAll(eleList) && elements.size() < min){
+                        attrKey = attr.getKey();
+                        attrVal = attr.getValue();
+                        min = elements.size();
+                    }
+                    elements = cleanTreeRoot.getElementsByAttribute(attr.getKey());
+                    if(elements.containsAll(eleList) && elements.size() < min){
+                        attrKey = attr.getKey();
+                        attrVal = "@OnlyAttrKey@";
+                        min = elements.size();
+                    }
+                } 
+            }
+            Elements elements = cleanTreeRoot.getElementsByTag(eleList.get(0).tagName());
+            if(elements.containsAll(eleList) && elements.size() < min){
+                attrKey = eleList.get(0).tagName();
+                attrVal = "@OnlyTagName@";
+            }
+            if(locationMarks.containsKey(attrKey)){
+                locationMarks.get(attrKey).add(attrVal);
+            }else{
+                Set<String> attrValSet = new HashSet<>();
+                attrValSet.add(attrVal);
+                locationMarks.put(attrKey, attrValSet);
+            }
+        }
+        return locationMarks;
+    }
     
     public static Map<String, ArrayList<Element>> getSeqEleMap(Set<Element> elementSet, int level, boolean includeAtt, boolean includeAttVal){
         Map<String, ArrayList<Element>> seqEleMap = new HashMap<>();
