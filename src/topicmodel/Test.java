@@ -68,27 +68,31 @@ public class Test {
 //            }
 //            System.out.println("*********************************");
 //        }
-        Map<String, Set<String>> locationMarks = getLocationMarks(cpyElement);
-        Iterator<String> iterLoc = locationMarks.keySet().iterator();
-        while(iterLoc.hasNext()){
-            String attrKey = iterLoc.next();
-            Iterator<String> iterVal = locationMarks.get(attrKey).iterator();
-            while(iterVal.hasNext()){
-                System.out.println(attrKey + "=\"" + iterVal.next() + "\"");
-            }
-        }
-//        Iterator<Element> iter = feMap.keySet().iterator();
-//        while(iter.hasNext()){
-//            Element ele = iter.next();
-//            System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
-//            System.out.println("Componet Size : " + feMap.get(ele).getComponentSize());
-//            System.out.println("Continual Num : " + feMap.get(ele).getContinualNum());
-//            for(Tag tag : feMap.get(ele).getTagList()){
-//               System.out.print("Start Tag : " + tag.getName() + " "); 
+        Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(cpyElement);
+//        Iterator<String> iterLoc = locationMarks.keySet().iterator();
+//        while(iterLoc.hasNext()){
+//            String attrKey = iterLoc.next();
+//            Iterator<String> iterVal = locationMarks.get(attrKey).iterator();
+//            while(iterVal.hasNext()){
+//                System.out.println(attrKey + "=\"" + iterVal.next() + "\"");
 //            }
-//            System.out.println();
-//            System.out.println("******************************");
 //        }
+        Iterator<Element> iter = eleInfo.keySet().iterator();
+        while(iter.hasNext()){
+            Element ele = iter.next();
+            System.out.println("Element sequence : " + getVerifiedSequence(ele, 1, true, true));
+            System.out.println("Componet Size : " + eleInfo.get(ele).getComponentSize());
+            System.out.println("Continual Num : " + eleInfo.get(ele).getContinualNum());
+            System.out.println("AttrKey : " + eleInfo.get(ele).getAttrKey());
+            System.out.println("AttrVal : " + eleInfo.get(ele).getAttrVal());
+            if(eleInfo.get(ele).getStartElements() != null){
+                for(Element startEle : eleInfo.get(ele).getStartElements()){
+                    System.out.print("Start Tag : " + startEle.tagName() + " "); 
+                }
+            }
+            System.out.println();
+            System.out.println("******************************");
+        }
         System.out.println(System.currentTimeMillis() - start);
         
 //        Iterator<String> keyIter = sequenceMap.keySet().iterator();
@@ -122,10 +126,10 @@ public class Test {
     }
     
     
-    public static Map<String, Set<String>> getLocationMarks(Element cleanTreeRoot){
+    public static Map<Element, FreqElementAttr> getFreqEleInfo(Element cleanTreeRoot){
         Map<Element, FreqElementAttr> feMap = getFreqElement(cleanTreeRoot);
         Map<String, ArrayList<Element>> seqEleMap = getSeqEleMap(feMap.keySet(), 2, false, false);
-        Map<String, Set<String>> locationMarks = new HashMap<>();
+//        Map<String, Set<String>> locationMarks = new HashMap<>();
         Iterator<String> iterStr = seqEleMap.keySet().iterator();
         while(iterStr.hasNext()){
             ArrayList<Element> eleList = seqEleMap.get(iterStr.next());
@@ -154,15 +158,13 @@ public class Test {
                 attrKey = eleList.get(0).tagName();
                 attrVal = "@OnlyTagName@";
             }
-            if(locationMarks.containsKey(attrKey)){
-                locationMarks.get(attrKey).add(attrVal);
-            }else{
-                Set<String> attrValSet = new HashSet<>();
-                attrValSet.add(attrVal);
-                locationMarks.put(attrKey, attrValSet);
+            feMap.get(eleList.get(0)).setAttrKey(attrKey);
+            feMap.get(eleList.get(0)).setAttrVal(attrVal);
+            for(int i=1; i<eleList.size(); i++){
+                feMap.remove(eleList.get(i));
             }
         }
-        return locationMarks;
+        return feMap;
     }
     
     public static Map<String, ArrayList<Element>> getSeqEleMap(Set<Element> elementSet, int level, boolean includeAtt, boolean includeAttVal){

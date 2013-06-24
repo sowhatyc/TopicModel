@@ -17,6 +17,8 @@ public class FreqElementAttr {
     private int componentSize;
     private int continualNum;
     private List<Element> startElements;
+    private String attrKey;
+    private String attrVal;
 
     /**
      * @return the componentSize
@@ -58,6 +60,34 @@ public class FreqElementAttr {
      */
     public void setStartElements(List<Element> startElements) {
         this.startElements = startElements;
+    }
+
+    /**
+     * @return the attrKey
+     */
+    public String getAttrKey() {
+        return attrKey;
+    }
+
+    /**
+     * @param attrKey the attrKey to set
+     */
+    public void setAttrKey(String attrKey) {
+        this.attrKey = attrKey;
+    }
+
+    /**
+     * @return the attrVal
+     */
+    public String getAttrVal() {
+        return attrVal;
+    }
+
+    /**
+     * @param attrVal the attrVal to set
+     */
+    public void setAttrVal(String attrVal) {
+        this.attrVal = attrVal;
     }
 
 
