@@ -142,17 +142,49 @@ public class PageAnalysis {
         }
         Elements entryEles = new Elements();
         Element priviousEle = elements.get(0).previousElementSibling();
+        if(StaticLib.tagSet == null){
+            StaticLib.initialTagSet();
+        }
         if(fea.getComponentSize() == 1){
-            while(priviousEle != null && !priviousEle.tag().formatAsBlock()){
+            while(priviousEle != null && !priviousEle.tag().formatAsBlock() && !StaticLib.tagSet.contains(priviousEle.tagName())){
                 priviousEle = priviousEle.previousElementSibling();
             }
+            if(priviousEle != null && (priviousEle.tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName()))){
+                entryEles.add(priviousEle);
+            }
+            for(int i=0; i<elements.size(); i++){
+                entryEles.addAll(elements.get(i).children());
+            }
+        }else{
+//            for(int i=0; i<elements.size(); i++){
+//                Elements childEles = elements.get(i).children();
+//                int j = 0;
+//                int equalCount = 0;
+//                int[] indexNum = new int[fea.getComponentSize()];
+//                Element entry = new Element
+//                for(; j<childEles.size(); j++){
+//                    if(childEles.get(j)..tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName())){
+//                        String eleAttr = getVerifiedSequence(childEles.get(j), 1, true, false);
+//                        eleAttr = "@" + eleAttr.substring(1);
+//                        eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
+//                        if(eleAttr.equals(fea.getStartElementsInfo().get(equalCount))){
+//                            indexNum[equalCount] = j;
+//                            if(++equalCount == indexNum.length){
+//                                for(int k=0; k<indexNum.length; k++){
+//                                    entry.add(childEles.get(indexNum[k]));
+//                                }
+//                                entryEles.addAll(entry);
+//                                entry = new Elements();
+//                                equalCount = 0;
+//                            }
+//                        }else{
+//                            equalCount = 0;
+//                        }
+//                    }
+//                }
+//            }
         }
-        if(priviousEle != null && priviousEle.tag().formatAsBlock()){
-            entryEles.add(priviousEle);
-        }
-        for(int i=0; i<elements.size(); i++){
-            entryEles.addAll(elements.get(i).children());
-        }
+        
         return entryEles;
     }
     
