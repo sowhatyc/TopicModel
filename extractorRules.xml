@@ -1,1 +1,2 @@
 <domainName>http://bbs.tianya.cn/listpage<componentSize>1</componentSize><continualNum>80</continualNum><attrKey>tbody</attrKey><attrVal>@OnlyTagName</attrVal><eleInfo>@tr class</eleInfo></domainName>
+<domainName>http://bbs.tianya.cn/contentpage<componentSize>1</componentSize><continualNum>98</continualNum><attrKey>class</attrKey><attrVal>atl-main</attrVal><eleInfo>@div class _host id replyid js_username js_restime</eleInfo></domainName>

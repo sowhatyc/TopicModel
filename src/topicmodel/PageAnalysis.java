@@ -68,16 +68,16 @@ public class PageAnalysis {
         return success;
     }
 //    
-    public FreqElementAttr analyzePage(String content, String url, boolean isListPage){
+    public boolean analyzePage(String content, String url, boolean isListPage){
         boolean success = true;
         if(!initialExtractorRule()){
             System.err.println("Initial Extractor Rules Failed!!!");
-            return null;
+            return false;
         }
         String baseUrl = StaticLib.getBaseUrl(url);
         if(baseUrl == null){
             System.err.println("The url is not Correct!!");
-            return null;
+            return false;
         }
         String type = "";
         if(isListPage){
@@ -91,7 +91,7 @@ public class PageAnalysis {
             cleanTree(element);
             Map<Element, FreqElementAttr> eleInfo = getFreqEleInfo(element);
             if(eleInfo == null){
-                return null;
+                return false;
             }
             Iterator<Element> iter = eleInfo.keySet().iterator();
             Element friEle = iter.next();
@@ -107,14 +107,53 @@ public class PageAnalysis {
             entry += "</domainName>\n";
             if(!new Storage().saveFile(StaticLib.extractorRulesPath, entry, true)){
                 System.err.println("Save File Failed!!!");
-                return null;
+                return false;
             }
             extractorRules.put(baseUrl+type, fea);
-            return fea;
         }else{
-            System.out.println("Already exist!");
-            return extractorRules.get(baseUrl+type);
+            System.out.println("Already Exsit!!");
         }
+        return true;
+    }
+    
+    public Elements getAnalysisiElements(String content, String url, boolean isListPage){
+        if(!analyzePage(content, url, isListPage)){
+            System.err.println("Analyze Page Failed!!");
+            return null;
+        }
+        String baseUrl = StaticLib.getBaseUrl(url);
+        String type = "";
+        if(isListPage){
+            type = "listpage";
+        }else{
+            type = "contentpage";
+        }
+        FreqElementAttr fea = extractorRules.get(baseUrl+type);
+        String attrKey = fea.getAttrKey();
+        String attrVal = fea.getAttrVal();
+        Elements elements = null;
+        Document doc = Jsoup.parse(content, baseUrl);
+        if(attrVal.equals("@OnlyAttrKey")){
+            elements = doc.body().getElementsByAttribute(attrKey);
+        }else if(attrVal.equals("@OnlyTagName")){
+            elements = doc.body().getElementsByTag(attrKey);
+        }else{
+            elements = doc.body().getElementsByAttributeValue(attrKey, attrVal);
+        }
+        Elements entryEles = new Elements();
+        Element priviousEle = elements.get(0).previousElementSibling();
+        if(fea.getComponentSize() == 1){
+            while(priviousEle != null && !priviousEle.tag().formatAsBlock()){
+                priviousEle = priviousEle.previousElementSibling();
+            }
+        }
+        if(priviousEle != null && priviousEle.tag().formatAsBlock()){
+            entryEles.add(priviousEle);
+        }
+        for(int i=0; i<elements.size(); i++){
+            entryEles.addAll(elements.get(i).children());
+        }
+        return entryEles;
     }
     
     private Map<Element, FreqElementAttr> getFreqEleInfo(Element cleanTreeRoot){
