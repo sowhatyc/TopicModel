@@ -1,2 +1,7 @@
 <domainName>http://bbs.tianya.cn/listpage<componentSize>1</componentSize><continualNum>80</continualNum><attrKey>tbody</attrKey><attrVal>@OnlyTagName</attrVal><eleInfo>@tr class</eleInfo></domainName>
 <domainName>http://bbs.tianya.cn/contentpage<componentSize>1</componentSize><continualNum>98</continualNum><attrKey>class</attrKey><attrVal>atl-main</attrVal><eleInfo>@div class _host id replyid js_username js_restime</eleInfo></domainName>
+<domainName>http://tieba.baidu.com/listpage<componentSize>1</componentSize><continualNum>50</continualNum><attrKey>id</attrKey><attrVal>thread_list</attrVal><eleInfo>@li class data-field</eleInfo></domainName>
+<domainName>http://bbs.gfan.com/listpage<componentSize>1</componentSize><continualNum>52</continualNum><attrKey>summary</attrKey><attrVal>forum_1260</attrVal><eleInfo>@tbody</eleInfo></domainName>
+<domainName>http://tieba.baidu.com/contentpage<componentSize>1</componentSize><continualNum>30</continualNum><attrKey>class</attrKey><attrVal>p_postlist</attrVal><eleInfo>@div class data-field</eleInfo></domainName>
+<domainName>http://bbs.anzhi.com/contentpage<componentSize>1</componentSize><continualNum>10</continualNum><attrKey>id</attrKey><attrVal>postlist</attrVal><eleInfo>@div id</eleInfo></domainName>
+<domainName>http://www.smzdm.com/listpage<componentSize>1</componentSize><continualNum>21</continualNum><attrKey>class</attrKey><attrVal>content</attrVal><eleInfo>@div class id</eleInfo></domainName>

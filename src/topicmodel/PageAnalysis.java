@@ -116,7 +116,7 @@ public class PageAnalysis {
         return true;
     }
     
-    public Elements getAnalysisiElements(String content, String url, boolean isListPage){
+    public List<Elements> getAnalysisiElements(String content, String url, boolean isListPage){
         if(!analyzePage(content, url, isListPage)){
             System.err.println("Analyze Page Failed!!");
             return null;
@@ -140,6 +140,7 @@ public class PageAnalysis {
         }else{
             elements = doc.body().getElementsByAttributeValue(attrKey, attrVal);
         }
+        List<Elements> elementsList = new ArrayList<>();
         Elements entryEles = new Elements();
         Element priviousEle = elements.get(0).previousElementSibling();
         if(StaticLib.tagSet == null){
@@ -151,42 +152,49 @@ public class PageAnalysis {
             }
             if(priviousEle != null && (priviousEle.tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName()))){
                 entryEles.add(priviousEle);
+                elementsList.add(entryEles);
             }
             for(int i=0; i<elements.size(); i++){
-                entryEles.addAll(elements.get(i).children());
+                for(Element ele : elements.get(i).children()){
+                    entryEles = new Elements();
+                    entryEles.add(ele);
+                    elementsList.add(entryEles);
+                }
             }
         }else{
-//            for(int i=0; i<elements.size(); i++){
-//                Elements childEles = elements.get(i).children();
-//                int j = 0;
-//                int equalCount = 0;
-//                int[] indexNum = new int[fea.getComponentSize()];
-//                Element entry = new Element
-//                for(; j<childEles.size(); j++){
-//                    if(childEles.get(j)..tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName())){
-//                        String eleAttr = getVerifiedSequence(childEles.get(j), 1, true, false);
-//                        eleAttr = "@" + eleAttr.substring(1);
-//                        eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
-//                        if(eleAttr.equals(fea.getStartElementsInfo().get(equalCount))){
-//                            indexNum[equalCount] = j;
-//                            if(++equalCount == indexNum.length){
-//                                for(int k=0; k<indexNum.length; k++){
-//                                    entry.add(childEles.get(indexNum[k]));
-//                                }
-//                                entryEles.addAll(entry);
-//                                entry = new Elements();
-//                                equalCount = 0;
-//                            }
-//                        }else{
-//                            equalCount = 0;
-//                        }
-//                    }
-//                }
-//            }
+            for(int i=0; i<elements.size(); i++){
+                Elements childEles = elements.get(i).children();
+                int j = 0;
+                int equalCount = 0;
+                int[] indexNum = new int[fea.getComponentSize()];
+                entryEles = new Elements();
+                for(; j<childEles.size(); j++){
+                    if(childEles.get(j).tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName())){
+                        String eleAttr = getVerifiedSequence(childEles.get(j), 1, true, false);
+                        eleAttr = "@" + eleAttr.substring(1);
+                        eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
+                        if(eleAttr.equals(fea.getStartElementsInfo().get(equalCount))){
+                            indexNum[equalCount] = j;
+                            if(++equalCount == indexNum.length){
+                                for(int k=0; k<indexNum.length; k++){
+                                    entryEles.add(childEles.get(indexNum[k]));
+                                }
+                                elementsList.add(entryEles);
+                                entryEles = new Elements();
+                                equalCount = 0;
+                            }
+                        }else{
+                            equalCount = 0;
+                        }
+                    }
+                }
+            }
         }
         
-        return entryEles;
+        return elementsList;
     }
+    
+    
     
     private Map<Element, FreqElementAttr> getFreqEleInfo(Element cleanTreeRoot){
         Map<Element, FreqElementAttr> feMap = getFreqElement(cleanTreeRoot);
@@ -441,8 +449,80 @@ public class PageAnalysis {
         }
     }
     
+    
+    public Map<String, Integer> getMinimalGeneralizationSeq(List<Elements> elesList){
+        Map<String, ArrayList<Set<String>>> cehs = new HashMap<>();
+        Map<String, Integer> cehsCountMap = new HashMap<>();
+        Map<String, Integer> minimalGerneralSeq = new HashMap<>();
+        for(Elements eles : elesList){
+            for(Element ele : eles){
+                String seq = getChildEleHierSeq(ele, true, true);
+                if(seq.equals("")){
+                    continue;
+                }
+                Pattern p = Pattern.compile("\"[^\"]+\"");
+                Matcher m = p.matcher(seq);
+                String seqCpy = m.replaceAll("");
+                int count = 0;
+                if(cehsCountMap.containsKey(seqCpy)){
+                    count = cehsCountMap.get(seqCpy);
+                }
+                cehsCountMap.put(seqCpy, count+1);
+                m = p.matcher(seq);
+                count = 0;
+                ArrayList<Set<String>> posVals = new ArrayList<>();
+                while(m.find()){
+                    String val = m.group();
+                    if(cehs.containsKey(seqCpy)){
+                        cehs.get(seqCpy).get(count).add(val);
+                    }else{
+                        Set<String> attrValSet = new HashSet<>();
+                        attrValSet.add(val);
+                        posVals.add(attrValSet);
+                    }
+                    count++;
+                }
+                if(!cehs.containsKey(seqCpy)){
+                    cehs.put(seqCpy, posVals);
+                }
+            }
+        }
+        Iterator<String> iter = cehs.keySet().iterator();
+        while(iter.hasNext()){
+            ArrayList<Set<String>> posVals = cehs.get(iter.next());
+            for(int i=0; i<posVals.size(); i++){
+                if(posVals.get(i).size() != 1){
+                    posVals.get(i).clear();
+                    posVals.get(i).add("\"\"");
+                }
+            }
+        }
+        iter = cehs.keySet().iterator();
+        while(iter.hasNext()){
+            String seq = iter.next();
+            String[] attrVals = seq.split("=");
+            String str = "";
+            for(int i=0; i<attrVals.length-1; i++){
+                Iterator<String> vals = cehs.get(seq).get(i).iterator();
+                str += attrVals[i] + "=" + vals.next();
+            }
+            str += attrVals[attrVals.length-1];
+            minimalGerneralSeq.put(str, cehsCountMap.get(seq));
+        }
+        return minimalGerneralSeq;
+    }
+    
+    public String getChildEleHierSeq(Element element, boolean includeAtt, boolean includeAttVal){
+        Element eleCpy = element.clone();
+        cleanTree(eleCpy);
+        String seq = getHierarchicalSequence(eleCpy, -1, includeAtt, includeAttVal);
+        seq = seq.replaceFirst("<[^/]+?>", "");
+        seq = seq.substring(0, seq.lastIndexOf("</"));
+        return seq;
+    }
+    
     private String getHierarchicalSequence(Element element, int level, boolean includeAtt, boolean includeAttVal){
-        if(level <= 0){
+        if(level == 0){
             return "";
         }
         String sequence = "<" + element.tagName();

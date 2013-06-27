@@ -51,10 +51,12 @@ public class WebCrawler {
 //            throw new UnsupportedOperationException("Not supported yet.");
             if (executionCount >= 3) {  
                 // 如果连接次数超过了最大值则停止重试  
+                System.err.println("Exceed the maximum connection count");
                 return false;  
             }
             if(ioe instanceof NoHttpResponseException){
                 // 如果服务器连接失败重试
+                System.err.println("Failed to connect to the server");
                 return true;
             }
             HttpRequest request = (HttpRequest) hc.getAttribute(ExecutionContext.HTTP_REQUEST);
