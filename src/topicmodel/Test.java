@@ -42,14 +42,14 @@ public class Test {
     public static void main(String args[]){
             //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
             //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
-//                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
+                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
 //                    String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
 //                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
 //                    String url = "http://tieba.baidu.com/p/2284182563";
 //                    String url = "http://bbs.gfan.com/forum-1260-1.html";
 //                    String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
 //                    String url = "http://www.smzdm.com/";
-                    String url = "http://forum.xitek.com/forum-2-1.html";
+//                    String url = "http://forum.xitek.com/forum-2-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
 //                    long start = System.currentTimeMillis();
 //                    Document doc = Jsoup.parse(retVal[1], StaticLib.getBaseUrl(url));
@@ -156,13 +156,14 @@ public class Test {
         PageAnalysis pa = new PageAnalysis();
         List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, true);
         System.out.println(elesList.size());
-        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
-        Iterator<String> iter = minimalGeneralSeq.keySet().iterator();
-        while(iter.hasNext()){
-            String str = iter.next();
-            System.out.println(str);
-            System.out.println(minimalGeneralSeq.get(str).size());
-        }
+        List<ElementNode> eNodeList = pa.getElementNode(elesList);
+//        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
+//        Iterator<String> iter = minimalGeneralSeq.keySet().iterator();
+//        while(iter.hasNext()){
+//            String str = iter.next();
+//            System.out.println(str);
+//            System.out.println(minimalGeneralSeq.get(str).size());
+//        }
         
     }
     

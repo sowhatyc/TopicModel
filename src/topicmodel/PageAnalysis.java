@@ -458,32 +458,118 @@ public class PageAnalysis {
                 nodeList.add(getNodeInfo(ele));
             }
             eNode.setNodes(nodeList);
+            eNodeList.add(eNode);
         }
         Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
         for(ElementNode eNode : eNodeList){
-            
+            String seq = getENodeSeq(eNode, false);
+            if(seq.equals("")){
+                continue;
+            }
+            if(seqENodeMap.containsKey(seq)){
+                seqENodeMap.get(seq).add(eNode);
+            }else{
+                List<ElementNode> eNList = new ArrayList<>();
+                eNList.add(eNode);
+                seqENodeMap.put(seq, eNList);
+            }
+        }
+        Iterator<String> iter = seqENodeMap.keySet().iterator();
+        while(iter.hasNext()){
+            String seq = iter.next();
+            List<ElementNode> eNList = seqENodeMap.get(seq);
+            if(eNList.size() > 1){
+                
+            }
         }
         return eNodeList;
     }
     
-    public String getENodeSeq(ElementNode eNode){
-        String seq = "";
-        for(Node node : eNode.getNodes()){
-            
+    private List<ElementNode> alignElementNode(List<ElementNode> eNList){
+        Map<String, Integer> seqCountMap = new HashMap<>();
+        for(ElementNode eNode : eNList){
+            if(eNode.getNodes() != null){
+                for(int i=0; i<eNode.getNodes().size(); i++){
+                    Node node = eNode.getNodes().get(i);
+                    if(node.getChildNode() != null){
+                        for(int j=0; j<node.getChildNode().size(); j++){
+                            
+                        }
+                    }
+                }
+            }
         }
+        return eNList;
     }
     
-    public String getNodeSeq(Node node){
+    private List<String> getSeqList(Node node, String prefix){
+        List<String> seqList = new ArrayList<>();
+        seqList.add(prefix + "_" + getNodeSeq(node, false, true));
+        if(node.getChildNode() != null){
+            for(int i=0; i<node.getChildNode().size(); i++){
+                seqList.addAll(getSeqList(node.getChildNode().get(i), prefix + "_" + i));
+            }
+        }
+        return seqList;
+    }
+    
+    
+    private int getElementNodeSize(ElementNode eNode){
+        int count = 0;
+        if(eNode.getNodes() != null){
+            for(Node childNode : eNode.getNodes()){
+                count += getNodeSize(childNode);
+            }
+        }
+        return count;
+    }
+    
+    private int getNodeSize(Node node){
+        int count = 0;
+        if(node.getChildNode() != null){
+            for(Node childNode : node.getChildNode()){
+                count += getNodeSize(childNode);
+            }
+        }
+        return count + 1;
+    }
+    
+    public String getENodeSeq(ElementNode eNode, boolean onlyStructrueNode){
+        String seq = "";
+        if(eNode.getNodes() != null){
+            for(Node node : eNode.getNodes()){
+                if(node.getChildNode() != null){
+                    for(Node childNode : node.getChildNode()){
+                        seq += getNodeSeq(childNode, onlyStructrueNode, false);
+                    }
+                }
+            }
+        }
+        return seq;
+    }
+    
+    public String getNodeSeq(Node node, boolean onlyStructrueNode, boolean singleNode){
         if(StaticLib.tagSet == null){
             StaticLib.initialTagSet();
         }
-        String seq = "<";
-        if(node.getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTag().toString())){
-            seq += node.getTag().toString();
+        String seq = "";
+        if(onlyStructrueNode && (node.getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTag().toString()))){
+            onlyStructrueNode = !onlyStructrueNode;
+        }
+        if(!onlyStructrueNode){
+            seq += "<" + node.getTag().toString();
             for(Attribute attr : node.getAttributes()){
                 seq += " " + attr.getKey();
             }
+            seq += ">";
+            if(!singleNode && node.getChildNode() != null){
+                for(Node childNode : node.getChildNode()){
+                    seq += getNodeSeq(childNode, onlyStructrueNode, singleNode);
+                }
+            }
+            seq += "</" + node.getTag().toString() + ">";
         }
+        return seq;
     }
     
     public Node getNodeInfo(Element ele){
@@ -495,9 +581,9 @@ public class PageAnalysis {
         List<Node> childNodeList = null;
         if(ele.children().size() != 0){
             childNodeList = new ArrayList<>();
-        }
-        for(Element childEle: ele.children()){
-            childNodeList.add(getNodeInfo(childEle));
+            for(Element childEle: ele.children()){
+                childNodeList.add(getNodeInfo(childEle));
+            }
         }
         node.setChildNode(childNodeList);
         return node;
