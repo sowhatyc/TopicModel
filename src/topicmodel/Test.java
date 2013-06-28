@@ -49,7 +49,7 @@ public class Test {
 //                    String url = "http://bbs.gfan.com/forum-1260-1.html";
 //                    String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
 //                    String url = "http://www.smzdm.com/";
-                    String url = "minimalGeneralSeq";
+                    String url = "http://forum.xitek.com/forum-2-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
 //                    long start = System.currentTimeMillis();
 //                    Document doc = Jsoup.parse(retVal[1], StaticLib.getBaseUrl(url));
@@ -154,14 +154,14 @@ public class Test {
 //            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
 //        }
         PageAnalysis pa = new PageAnalysis();
-        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, false);
+        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, true);
         System.out.println(elesList.size());
-        Map<String, Integer> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
+        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
         Iterator<String> iter = minimalGeneralSeq.keySet().iterator();
         while(iter.hasNext()){
             String str = iter.next();
             System.out.println(str);
-            System.out.println(minimalGeneralSeq.get(str));
+            System.out.println(minimalGeneralSeq.get(str).size());
         }
         
     }

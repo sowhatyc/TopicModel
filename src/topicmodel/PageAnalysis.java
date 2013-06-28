@@ -449,27 +449,88 @@ public class PageAnalysis {
         }
     }
     
+    public List<ElementNode> getElementNode(List<Elements> elesList){
+        List<ElementNode> eNodeList = new ArrayList<>();
+        for(Elements eles : elesList){
+            ElementNode eNode = new ElementNode();
+            List<Node> nodeList = new ArrayList<>();
+            for(Element ele : eles){
+                nodeList.add(getNodeInfo(ele));
+            }
+            eNode.setNodes(nodeList);
+        }
+        Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
+        for(ElementNode eNode : eNodeList){
+            
+        }
+        return eNodeList;
+    }
     
-    public Map<String, Integer> getMinimalGeneralizationSeq(List<Elements> elesList){
+    public String getENodeSeq(ElementNode eNode){
+        String seq = "";
+        for(Node node : eNode.getNodes()){
+            
+        }
+    }
+    
+    public String getNodeSeq(Node node){
+        if(StaticLib.tagSet == null){
+            StaticLib.initialTagSet();
+        }
+        String seq = "<";
+        if(node.getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTag().toString())){
+            seq += node.getTag().toString();
+            for(Attribute attr : node.getAttributes()){
+                seq += " " + attr.getKey();
+            }
+        }
+    }
+    
+    public Node getNodeInfo(Element ele){
+        Node node = new Node();
+        node.setTag(ele.tag());
+        node.setAttributes(ele.attributes());
+        node.setText(ele.text());
+        node.setOwnText(ele.ownText());
+        List<Node> childNodeList = null;
+        if(ele.children().size() != 0){
+            childNodeList = new ArrayList<>();
+        }
+        for(Element childEle: ele.children()){
+            childNodeList.add(getNodeInfo(childEle));
+        }
+        node.setChildNode(childNodeList);
+        return node;
+    }
+    
+    public Map<String, ArrayList<Element>> getMinimalGeneralizationSeq(List<Elements> elesList){
         Map<String, ArrayList<Set<String>>> cehs = new HashMap<>();
-        Map<String, Integer> cehsCountMap = new HashMap<>();
-        Map<String, Integer> minimalGerneralSeq = new HashMap<>();
+        Map<String, ArrayList<Element>> cehsEleMap = new HashMap<>();
+        Map<String, ArrayList<Element>> minimalGerneralSeq = new HashMap<>();
+//        List<Element> eleList = new ArrayList<>();
+//        for(Elements eles: elesList){
+//            for(Element ele : eles){
+//                eleList.add(ele);
+//            }
+//        }
         for(Elements eles : elesList){
             for(Element ele : eles){
-                String seq = getChildEleHierSeq(ele, true, true);
+                String seq = getChildEleHierSeq(ele, true, true, true);
                 if(seq.equals("")){
                     continue;
                 }
-                Pattern p = Pattern.compile("\"[^\"]+\"");
+                Pattern p = Pattern.compile("\"[^\"]*\"");
                 Matcher m = p.matcher(seq);
                 String seqCpy = m.replaceAll("");
-                int count = 0;
-                if(cehsCountMap.containsKey(seqCpy)){
-                    count = cehsCountMap.get(seqCpy);
+                if(cehsEleMap.containsKey(seqCpy)){
+                    cehsEleMap.get(seqCpy).add(ele);
+                }else{
+                    ArrayList<Element> eleList = new ArrayList<>();
+                    eleList.add(ele);
+                    cehsEleMap.put(seqCpy, eleList);
                 }
-                cehsCountMap.put(seqCpy, count+1);
                 m = p.matcher(seq);
-                count = 0;
+                int count = 0;
                 ArrayList<Set<String>> posVals = new ArrayList<>();
                 while(m.find()){
                     String val = m.group();
@@ -507,14 +568,17 @@ public class PageAnalysis {
                 str += attrVals[i] + "=" + vals.next();
             }
             str += attrVals[attrVals.length-1];
-            minimalGerneralSeq.put(str, cehsCountMap.get(seq));
+            minimalGerneralSeq.put(str, cehsEleMap.get(seq));
         }
+        
         return minimalGerneralSeq;
     }
     
-    public String getChildEleHierSeq(Element element, boolean includeAtt, boolean includeAttVal){
+    public String getChildEleHierSeq(Element element, boolean includeAtt, boolean includeAttVal, boolean treeClean){
         Element eleCpy = element.clone();
-        cleanTree(eleCpy);
+        if(treeClean){
+            cleanTree(eleCpy);
+        }
         String seq = getHierarchicalSequence(eleCpy, -1, includeAtt, includeAttVal);
         seq = seq.replaceFirst("<[^/]+?>", "");
         seq = seq.substring(0, seq.lastIndexOf("</"));

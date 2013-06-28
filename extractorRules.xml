@@ -5,3 +5,4 @@
 <domainName>http://tieba.baidu.com/contentpage<componentSize>1</componentSize><continualNum>30</continualNum><attrKey>class</attrKey><attrVal>p_postlist</attrVal><eleInfo>@div class data-field</eleInfo></domainName>
 <domainName>http://bbs.anzhi.com/contentpage<componentSize>1</componentSize><continualNum>10</continualNum><attrKey>id</attrKey><attrVal>postlist</attrVal><eleInfo>@div id</eleInfo></domainName>
 <domainName>http://www.smzdm.com/listpage<componentSize>1</componentSize><continualNum>21</continualNum><attrKey>class</attrKey><attrVal>content</attrVal><eleInfo>@div class id</eleInfo></domainName>
+<domainName>http://forum.xitek.com/listpage<componentSize>1</componentSize><continualNum>53</continualNum><attrKey>summary</attrKey><attrVal>forum_2</attrVal><eleInfo>@tbody</eleInfo></domainName>
