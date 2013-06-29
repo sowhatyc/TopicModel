@@ -13,6 +13,7 @@ import java.util.List;
 public class ElementNode {
     
     private List<Node> nodes;
+    private int positionIndex;
 
     /**
      * @return the nodes
@@ -26,5 +27,19 @@ public class ElementNode {
      */
     public void setNodes(List<Node> nodes) {
         this.nodes = nodes;
+    }
+
+    /**
+     * @return the positionIndex
+     */
+    public int getPositionIndex() {
+        return positionIndex;
+    }
+
+    /**
+     * @param positionIndex the positionIndex to set
+     */
+    public void setPositionIndex(int positionIndex) {
+        this.positionIndex = positionIndex;
     }
 }

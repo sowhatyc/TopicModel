@@ -15,9 +15,7 @@ import org.jsoup.parser.Tag;
 public class Node {
     
     private Tag tag;
-    private Attributes attributes;
-    private String text;
-    private String ownText;
+    private TextNodeUnit textNodeUnit;
     private List<Node> childNode;
     private boolean isAllHave;
 
@@ -33,34 +31,6 @@ public class Node {
      */
     public void setTag(Tag tag) {
         this.tag = tag;
-    }
-
-    /**
-     * @return the attributes
-     */
-    public Attributes getAttributes() {
-        return attributes;
-    }
-
-    /**
-     * @param attributes the attributes to set
-     */
-    public void setAttributes(Attributes attributes) {
-        this.attributes = attributes;
-    }
-
-    /**
-     * @return the text
-     */
-    public String getText() {
-        return text;
-    }
-
-    /**
-     * @param text the text to set
-     */
-    public void setText(String text) {
-        this.text = text;
     }
 
     /**
@@ -92,17 +62,18 @@ public class Node {
     }
 
     /**
-     * @return the ownText
+     * @return the textNodeUnit
      */
-    public String getOwnText() {
-        return ownText;
+    public TextNodeUnit getTextNodeUnit() {
+        return textNodeUnit;
     }
 
     /**
-     * @param ownText the ownText to set
+     * @param textNodeUnit the textNodeUnit to set
      */
-    public void setOwnText(String ownText) {
-        this.ownText = ownText;
+    public void setTextNodeUnit(TextNodeUnit textNodeUnit) {
+        this.textNodeUnit = textNodeUnit;
     }
+
     
 }
