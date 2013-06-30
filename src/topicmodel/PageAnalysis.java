@@ -37,6 +37,8 @@ public class PageAnalysis {
     
 //    Map<Element, FreqElementAttr> eleInfo;
     private static Map<String, FreqElementAttr> extractorRules = null;
+    private String baseUrl;
+    private String type;
     
     public static boolean initialExtractorRule(){
         boolean success = true;
@@ -87,6 +89,8 @@ public class PageAnalysis {
         }else{
             type = "contentpage";
         }
+        setBaseUrl(baseUrl);
+        setType(type);
         if(!extractorRules.containsKey(baseUrl+type)){
             Document doc = Jsoup.parse(content, baseUrl);
             Element element = doc.body();
@@ -464,20 +468,31 @@ public class PageAnalysis {
             eNode.setPositionIndex(count++);
             eNodeList.add(eNode);
         }
+        FreqElementAttr fea = extractorRules.get(baseUrl+type);
+        int continualNum = fea.getContinualNum();
+        int level = 2;
+        int maximumNum = Integer.MIN_VALUE;
         Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
-        for(ElementNode eNode : eNodeList){
-            String seq = getENodeSeq(eNode, true);
-            if(seq.equals("")){
-                continue;
+        do{
+            seqENodeMap.clear();
+            for(ElementNode eNode : eNodeList){
+                String seq = getENodeSeq(eNode, true, level);
+                if(seq.equals("")){
+                    continue;
+                }
+                if(seqENodeMap.containsKey(seq)){
+                    seqENodeMap.get(seq).add(eNode);
+                }else{
+                    List<ElementNode> eNList = new ArrayList<>();
+                    eNList.add(eNode);
+                    seqENodeMap.put(seq, eNList);
+                }
+                if(seqENodeMap.get(seq).size() > maximumNum){
+                    maximumNum = seqENodeMap.get(seq).size();
+                }
             }
-            if(seqENodeMap.containsKey(seq)){
-                seqENodeMap.get(seq).add(eNode);
-            }else{
-                List<ElementNode> eNList = new ArrayList<>();
-                eNList.add(eNode);
-                seqENodeMap.put(seq, eNList);
-            }
-        }
+        }while(maximumNum >= continualNum);
+        
         Iterator<String> iter = seqENodeMap.keySet().iterator();
         eNodeList.clear();
         while(iter.hasNext()){
@@ -622,7 +637,7 @@ public class PageAnalysis {
     }
     
     private Node updateNode(Node node, Set<String> necessaryNodeSeq, String prefix){
-        String seq = prefix + "_" + getNodeSeq(node, false, true);
+        String seq = prefix + "_" + getNodeSeq(node, false, true, 1);
         if(necessaryNodeSeq.contains(seq)){
             node.setIsAllHave(true);
         }
@@ -638,7 +653,7 @@ public class PageAnalysis {
     
     private List<String> getSeqList(Node node, String prefix){
         List<String> seqList = new ArrayList<>();
-        seqList.add(prefix + "_" + getNodeSeq(node, false, true));
+        seqList.add(prefix + "_" + getNodeSeq(node, false, true, 1));
         if(node.getChildNode() != null){
             for(int i=0; i<node.getChildNode().size(); i++){
                 seqList.addAll(getSeqList(node.getChildNode().get(i), prefix + "_" + i));
@@ -668,13 +683,13 @@ public class PageAnalysis {
         return count + 1;
     }
     
-    public String getENodeSeq(ElementNode eNode, boolean onlyStructrueNode){
+    public String getENodeSeq(ElementNode eNode, boolean onlyStructrueNode, int level){
         String seq = "";
         if(eNode.getNodes() != null){
             for(Node node : eNode.getNodes()){
                 if(node.getChildNode() != null){
                     for(Node childNode : node.getChildNode()){
-                        seq += getNodeSeq(childNode, onlyStructrueNode, false);
+                        seq += getNodeSeq(childNode, onlyStructrueNode, false, level);
                     }
                 }
             }
@@ -682,11 +697,14 @@ public class PageAnalysis {
         return seq;
     }
     
-    public String getNodeSeq(Node node, boolean onlyStructrueNode, boolean singleNode){
+    public String getNodeSeq(Node node, boolean onlyStructrueNode, boolean singleNode, int level){
         if(StaticLib.tagSet == null){
             StaticLib.initialTagSet();
         }
         String seq = "";
+        if(level == 0){
+            return seq;
+        }
         boolean osn = onlyStructrueNode;
         if(osn && (node.getTextNodeUnit().getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTextNodeUnit().getTag().toString()))){
             osn = !osn;
@@ -699,7 +717,7 @@ public class PageAnalysis {
             seq += ">";
             if(!singleNode && node.getChildNode() != null){
                 for(Node childNode : node.getChildNode()){
-                    seq += getNodeSeq(childNode, onlyStructrueNode, singleNode);
+                    seq += getNodeSeq(childNode, onlyStructrueNode, singleNode, level-1);
                 }
             }
             seq += "</" + node.getTextNodeUnit().getTag().toString() + ">";
@@ -844,6 +862,34 @@ public class PageAnalysis {
                 cleanTree(ele);
             }
         }
+    }
+
+    /**
+     * @return the baseUrl
+     */
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    /**
+     * @param baseUrl the baseUrl to set
+     */
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(String type) {
+        this.type = type;
     }
     
 }
