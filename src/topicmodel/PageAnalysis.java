@@ -498,17 +498,19 @@ public class PageAnalysis {
         List<List<String>> entrys = new ArrayList<>();
         for(ElementNode eNode : eNodeList){
             List<TextNode> elementNT = getElementNodeTextSeq(eNode);
-            if(elementNT != null){
+            if(elementNT != null && !elementNT.isEmpty()){
                 List<String> entry = new ArrayList<>();
                 for(TextNode tNode : elementNT){
+                    String str = "";
                     for(TextNodeUnit tnu : tNode.getTextNode()){
-                        String str = "@Attributes:";
+                        str += "@Tag: " + tnu.getTag().getName() + " ";
+                        str += "@Attributes: ";
                         for(Attribute attr : tnu.getAttributes()){
                             str += attr.getKey() + "=\"" + attr.getValue() + "\" ";
                         }
-                        str += "@Text:" + tnu.getText();
-                        entry.add(str);
+                        str += "@Text: " + tnu.getText() + " ";
                     }
+                    entry.add(str);
                 }
                 entrys.add(entry);
             }
@@ -530,33 +532,40 @@ public class PageAnalysis {
     
     private List<TextNode> getNodeTexSeq(Node node, boolean isAlign){
         List<TextNode> nodeTextSeq = new ArrayList<>();
-        if(isAlign && !node.isIsAllHave()){
-            List<Node> nodeList = new LinkedList<>();
-            nodeList.add(node);
-            List<TextNodeUnit> tnuList = new ArrayList<>();
-            while(!nodeList.isEmpty()){
-                Node qNode = nodeList.get(0);
-                if(!qNode.getTextNodeUnit().getText().equals("")){
-                    tnuList.add(qNode.getTextNodeUnit());
-                }
-                if(qNode.getChildNode() != null){
-                    nodeList.addAll(qNode.getChildNode());
-                }
-                nodeList.remove(0);
-            }
-            TextNode tN = new TextNode();
+        List<TextNodeUnit> tnuList = new ArrayList<>();
+        TextNode tN = new TextNode();
+        if(!node.getTextNodeUnit().getText().trim().equals("") || (node.isIsAllHave() && node.getChildNode() == null)){
+            tnuList.add(node.getTextNodeUnit());
             tN.setTextNode(tnuList);
             nodeTextSeq.add(tN);
-        }else{
-            if(!node.getTextNodeUnit().getText().equals("")){
-                List<TextNodeUnit> tnuList = new ArrayList<>();
-                tnuList.add(node.getTextNodeUnit());
-                TextNode tN = new TextNode();
-                tN.setTextNode(tnuList);
-                nodeTextSeq.add(tN);
-            }
-            if(node.getChildNode() != null){
-                for(Node childNode : node.getChildNode()){
+        }
+        if(node.getChildNode() != null){
+            for(Node childNode : node.getChildNode()){
+                if(isAlign && !childNode.isIsAllHave()){
+                    List<Node> nodeList = new LinkedList<>();
+                    nodeList.add(childNode);
+                    List<TextNodeUnit> tnuChildList = new ArrayList<>();
+                    while(!nodeList.isEmpty()){
+                        Node qNode = nodeList.get(0);
+                        if(!qNode.getTextNodeUnit().getText().equals("")){
+                            tnuChildList.add(qNode.getTextNodeUnit());
+                        }
+                        if(qNode.getChildNode() != null){
+                            nodeList.addAll(qNode.getChildNode());
+                        }
+                        nodeList.remove(0);
+                    }
+                    tnuList.addAll(tnuChildList);
+                    if(!tnuList.isEmpty()){
+                        int index = nodeTextSeq.indexOf(tN);
+                        if(index != -1){
+                            nodeTextSeq.get(index).setTextNode(tnuList);
+                        }else{
+                            tN.setTextNode(tnuList);
+                            nodeTextSeq.add(tN);
+                        }
+                    }
+                }else{
                     nodeTextSeq.addAll(getNodeTexSeq(childNode, isAlign));
                 }
             }
@@ -679,11 +688,11 @@ public class PageAnalysis {
         }
         String seq = "";
         boolean osn = onlyStructrueNode;
-        if(osn && (node.getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTag().toString()))){
+        if(osn && (node.getTextNodeUnit().getTag().formatAsBlock() || StaticLib.tagSet.contains(node.getTextNodeUnit().getTag().toString()))){
             osn = !osn;
         }
         if(!osn){
-            seq += "<" + node.getTag().toString();
+            seq += "<" + node.getTextNodeUnit().getTag().toString();
             for(Attribute attr : node.getTextNodeUnit().getAttributes()){
                 seq += " " + attr.getKey();
             }
@@ -693,17 +702,17 @@ public class PageAnalysis {
                     seq += getNodeSeq(childNode, onlyStructrueNode, singleNode);
                 }
             }
-            seq += "</" + node.getTag().toString() + ">";
+            seq += "</" + node.getTextNodeUnit().getTag().toString() + ">";
         }
         return seq;
     }
     
     public Node getNodeInfo(Element ele){
         Node node = new Node();
-        node.setTag(ele.tag());
         TextNodeUnit tNU = new TextNodeUnit();
         tNU.setAttributes(ele.attributes());
         tNU.setText(ele.ownText());
+        tNU.setTag(ele.tag());
         node.setTextNodeUnit(tNU);
         List<Node> childNodeList = null;
         if(ele.children().size() != 0){

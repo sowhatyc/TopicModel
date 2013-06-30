@@ -14,24 +14,9 @@ import org.jsoup.parser.Tag;
  */
 public class Node {
     
-    private Tag tag;
     private TextNodeUnit textNodeUnit;
     private List<Node> childNode;
     private boolean isAllHave;
-
-    /**
-     * @return the tag
-     */
-    public Tag getTag() {
-        return tag;
-    }
-
-    /**
-     * @param tag the tag to set
-     */
-    public void setTag(Tag tag) {
-        this.tag = tag;
-    }
 
     /**
      * @return the childNode

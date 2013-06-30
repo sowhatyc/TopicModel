@@ -12,6 +12,7 @@ import org.jsoup.parser.Tag;
  * @author YangC
  */
 public class TextNodeUnit {
+    private Tag tag;
     private Attributes attributes;
     private String text;
 
@@ -42,5 +43,19 @@ public class TextNodeUnit {
      */
     public void setText(String text) {
         this.text = text;
+    }
+
+    /**
+     * @return the tag
+     */
+    public Tag getTag() {
+        return tag;
+    }
+
+    /**
+     * @param tag the tag to set
+     */
+    public void setTag(Tag tag) {
+        this.tag = tag;
     }
 }
