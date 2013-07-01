@@ -455,7 +455,7 @@ public class PageAnalysis {
         }
     }
     
-    public List<ElementNode> getElementNode(List<Elements> elesList){
+    public List<List<String>> getElementNode(List<Elements> elesList){
         List<ElementNode> eNodeList = new ArrayList<>();
         int count = 0;
         for(Elements eles : elesList){
@@ -470,11 +470,13 @@ public class PageAnalysis {
         }
         FreqElementAttr fea = extractorRules.get(baseUrl+type);
         int continualNum = fea.getContinualNum();
-        int level = 2;
+        int level = 1;
         int maximumNum = Integer.MIN_VALUE;
         Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
         do{
+            maximumNum = Integer.MIN_VALUE;
             seqENodeMap.clear();
+            level++;
             for(ElementNode eNode : eNodeList){
                 String seq = getENodeSeq(eNode, true, level);
                 if(seq.equals("")){
@@ -491,7 +493,7 @@ public class PageAnalysis {
                     maximumNum = seqENodeMap.get(seq).size();
                 }
             }
-        }while(maximumNum >= continualNum);
+        }while(maximumNum > continualNum);
         
         Iterator<String> iter = seqENodeMap.keySet().iterator();
         eNodeList.clear();
@@ -531,7 +533,7 @@ public class PageAnalysis {
             }
         }
         
-        return eNodeList;
+        return entrys;
     }
     
     private List<TextNode> getElementNodeTextSeq(ElementNode eNode){

@@ -48,8 +48,9 @@ public class Test {
 //                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
 //                    String url = "http://tieba.baidu.com/p/2426049054";
 //                    String url = "http://bbs.gfan.com/forum-1260-1.html";
-                    String url = "http://bbs.gfan.com/forum.php?mod=viewthread&tid=6273531&extra=page%3D1";
+//                    String url = "http://bbs.gfan.com/forum.php?mod=viewthread&tid=6273531&extra=page%3D1";
 //                    String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
+                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
 //                    String url = "http://www.smzdm.com/";
 //                    String url = "http://forum.xitek.com/forum-2-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
@@ -156,9 +157,9 @@ public class Test {
 //            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
 //        }
         PageAnalysis pa = new PageAnalysis();
-        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, false);
+        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, true);
         System.out.println(elesList.size());
-        List<ElementNode> eNodeList = pa.getElementNode(elesList);
+        List<List<String>> entrys = pa.getElementNode(elesList);
 //        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
 //        Iterator<String> iter = minimalGeneralSeq.keySet().iterator();
 //        while(iter.hasNext()){
