@@ -42,10 +42,10 @@ public class Test {
     public static void main(String args[]){
             //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
             //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
-                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
+//                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
 //                    String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
         //tieba's content consists javascript
-//                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
+//                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B1%F6%B5%C3k5";
 //                    String url = "http://tieba.baidu.com/p/2426049054";
 //                    String url = "http://bbs.gfan.com/forum-1260-1.html";
 //                    String url = "http://bbs.gfan.com/forum.php?mod=viewthread&tid=6273531&extra=page%3D1";
@@ -53,7 +53,9 @@ public class Test {
 //                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
 //                    String url = "http://www.smzdm.com/";
 //                    String url = "http://forum.xitek.com/forum-2-1.html";
+        String url = "http://bbs.weiphone.com/read-htm-tid-6635369.html";
                     String retVal[] = new WebCrawler().getContent(url);
+//        String content = new WebCrawler().getContentMethod2(url);
 //                    long start = System.currentTimeMillis();
 //                    Document doc = Jsoup.parse(retVal[1], StaticLib.getBaseUrl(url));
 //                    Elements elements = doc.body().getElementsByTag("tbody");
@@ -157,7 +159,8 @@ public class Test {
 //            Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
 //        }
         PageAnalysis pa = new PageAnalysis();
-        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, true);
+        List<Elements> elesList = pa.getAnalysisiElements(retVal[1], url, false);
+//        List<Elements> elesList = pa.getAnalysisiElements(content, url, true);
         System.out.println(elesList.size());
         List<List<String>> entrys = pa.getElementNode(elesList);
 //        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);

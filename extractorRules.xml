@@ -8,3 +8,5 @@
 <domainName>http://bbs.gfan.com/contentpage<componentSize>1</componentSize><continualNum>10</continualNum><attrKey>id</attrKey><attrVal>postlist</attrVal><eleInfo>@div id</eleInfo></domainName>
 <domainName>http://bbs.anzhi.com/listpage<componentSize>1</componentSize><continualNum>52</continualNum><attrKey>summary</attrKey><attrVal>forum_1020</attrVal><eleInfo>@tbody</eleInfo></domainName>
 <domainName>http://bbs.tianya.cn/listpage<componentSize>1</componentSize><continualNum>80</continualNum><attrKey>tbody</attrKey><attrVal>@OnlyTagName</attrVal><eleInfo>@tr class</eleInfo></domainName>
+<domainName>http://bbs.weiphone.com/listpage<componentSize>1</componentSize><continualNum>36</continualNum><attrKey>id</attrKey><attrVal>threadlist</attrVal><eleInfo>@tr class</eleInfo></domainName>
+<domainName>http://bbs.weiphone.com/contentpage<componentSize>2</componentSize><continualNum>10</continualNum><attrKey>name</attrKey><attrVal>delatc</attrVal><eleInfo>@div class id</eleInfo><eleInfo>@table width class</eleInfo></domainName>

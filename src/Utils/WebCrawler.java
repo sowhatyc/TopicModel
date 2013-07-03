@@ -6,6 +6,7 @@ package Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.AbstractHttpClient;
+import org.apache.http.impl.client.DecompressingHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.protocol.ExecutionContext;
@@ -41,6 +43,7 @@ public class WebCrawler {
     private HttpClient httpClient = null;
     public static String CHARSET_ENCODING = "UTF-8";
     public static String USER_AGENT = "Mozilla/4.0 (compatible; MSIE 7.0; Win32)";
+    byte[] contentBytes = null;
     
 //    private HttpResponse response;
     
@@ -77,7 +80,7 @@ public class WebCrawler {
         }
     }
     
-    private String getContentMethod2(String url){
+    public String getContentMethod2(String url){
         String content = null;
         getDefaultClient();
         try {
@@ -91,6 +94,7 @@ public class WebCrawler {
                     byte[] contentBytes = IOUtils.toByteArray(instream);
 //                    byte[] contentBytes = EntityUtils.toByteArray(entity);
                     String encode = ContentType.getOrDefault(entity).getCharset().toString();
+                    System.out.append("*******");
                     if(encode == null){
                         encode = getEncode(contentBytes);
                     }
@@ -123,7 +127,7 @@ public class WebCrawler {
                 String content = null;
                 if(entity != null){
                     InputStream instream = entity.getContent();
-                    byte[] contentBytes = IOUtils.toByteArray(instream);
+                    contentBytes = IOUtils.toByteArray(instream);
                     String encode = ContentType.getOrDefault(entity).getCharset().toString();
                     if(encode == null){
                         encode = getEncode(contentBytes);
@@ -149,6 +153,19 @@ public class WebCrawler {
             Logger.getLogger(WebCrawler.class.getName()).log(Level.SEVERE, null, ex);
         } finally{
 //            httpClient.getConnectionManager().shutdown();
+            if(retVal == null && contentBytes != null){
+                retVal = new String[2]; 
+                String encode = getEncode(contentBytes);
+                if(encode == null){
+                    encode = CHARSET_ENCODING;
+                }
+                try {
+                    retVal[1] = new String(contentBytes, encode);
+                    retVal[0] = encode;
+                } catch (UnsupportedEncodingException ex) {
+                    Logger.getLogger(WebCrawler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
             return retVal;
         }
     }

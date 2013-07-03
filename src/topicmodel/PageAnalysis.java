@@ -175,7 +175,7 @@ public class PageAnalysis {
                 int[] indexNum = new int[fea.getComponentSize()];
                 entryEles = new Elements();
                 for(; j<childEles.size(); j++){
-                    if(childEles.get(j).tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName())){
+                    if(childEles.get(j).tag().formatAsBlock() || StaticLib.tagSet.contains(childEles.get(j).tagName())){
                         String eleAttr = getVerifiedSequence(childEles.get(j), 1, true, false);
                         eleAttr = "@" + eleAttr.substring(1);
                         eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
@@ -239,8 +239,8 @@ public class PageAnalysis {
             feMap.get(eleList.get(0)).setAttrVal(attrVal);
             int size = feMap.get(eleList.get(0)).getContinualNum() * eleList.size();
             feMap.get(eleList.get(0)).setContinualNum(size);
-            if(size > maxCount){
-                maxCount = size;
+            if(size * feMap.get(eleList.get(0)).getComponentSize() > maxCount){
+                maxCount = size * feMap.get(eleList.get(0)).getComponentSize();
                 maxEle = eleList.get(0);
             }
             for(int i=1; i<eleList.size(); i++){
@@ -295,7 +295,7 @@ public class PageAnalysis {
             Element eleParent = eleList.get(0).parent();
             while(eleParent != root){
                 if(feMap.containsKey(eleParent)){
-                    if(eleList.size() * feMap.get(eleList.get(0)).getContinualNum() < feMap.get(eleParent).getContinualNum()){
+                    if(eleList.size() * feMap.get(eleList.get(0)).getContinualNum() < feMap.get(eleParent).getContinualNum() || feMap.get(eleParent).getComponentSize() != 1){
                         for(Element ele : eleList){
                             feMap.remove(ele);
                         }
@@ -337,7 +337,7 @@ public class PageAnalysis {
         elements.add(root);
         while(!elements.isEmpty()){
             Element element = elements.get(0);
-//            String sequence = getHierarchicalSequence(element, 1, true, true).replaceAll("@null", "");
+            String sequence = getHierarchicalSequence(element, 1, true, true).replaceAll("@null", "");
             FreqElementAttr lfe = isFreqElement(element, feMap.containsKey(element.parent()));
             Elements childEles = element.children();
             for(Element childEle : childEles){
@@ -375,6 +375,7 @@ public class PageAnalysis {
             maxOccourence = 0;
             for(int i=0; i<componetSize; i++){
                 int currentIndex = i;
+                occourence = 1;
                 String currentSequence = "";
                 String nextSequence = "";
                 for(int j=currentIndex; j<currentIndex+componetSize; j++){
@@ -390,15 +391,15 @@ public class PageAnalysis {
                     if(currentSequence.compareTo(nextSequence) == 0){
                         if(occourence == 1){
                             startElementsInfo.clear();
-                            String info = "";
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
+                                String info = "";
                                 Element eleInfo = childElements.get(k);
                                 info = "@" + eleInfo.tagName();
                                 for(Attribute attr : eleInfo.attributes()){
                                     info += " " + attr.getKey();
                                 }
+                                startElementsInfo.add(info);
                             }
-                            startElementsInfo.add(info);
                         }
                         occourence++;
                     }else{
@@ -413,9 +414,6 @@ public class PageAnalysis {
                 }
                 if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
                     maxOccourence = occourence;
-                }
-                if(maxOccourence >= continualOccourence){
-                    break;
                 }
             }
             if(maxOccourence >= continualOccourence){
@@ -473,6 +471,8 @@ public class PageAnalysis {
         int level = 1;
         int maximumNum = Integer.MIN_VALUE;
         Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
+        int nochange = 0;
+        int oldMaximumNum = maximumNum;
         do{
             maximumNum = Integer.MIN_VALUE;
             seqENodeMap.clear();
@@ -492,6 +492,14 @@ public class PageAnalysis {
                 if(seqENodeMap.get(seq).size() > maximumNum){
                     maximumNum = seqENodeMap.get(seq).size();
                 }
+            }
+            if(oldMaximumNum != maximumNum){
+                oldMaximumNum = maximumNum;
+            }else{
+                nochange++;
+            }
+            if(nochange >= 3){
+                break;
             }
         }while(maximumNum > continualNum);
         
