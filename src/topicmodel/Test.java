@@ -42,7 +42,7 @@ public class Test {
     public static void main(String args[]){
             //        System.out.println(new WebCrawler().getContent("http://bbs.tianya.cn/list-develop-1.shtml"));
             //        System.out.println(new WebCrawler().getContentMethod2("http://bbs.tianya.cn/list-develop-1.shtml"));
-//                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
+                    String url = "http://bbs.tianya.cn/list-828-1.shtml";
 //                    String url = "http://bbs.tianya.cn/post-828-207037-1.shtml";
         //tieba's content consists javascript
 //                    String url = "http://tieba.baidu.com/f?ie=utf-8&kw=%B0%CB%D8%D4%B4%F3%D4%D3%BB%E2";
@@ -50,7 +50,7 @@ public class Test {
 //                    String url = "http://bbs.gfan.com/forum-1260-1.html";
 //                    String url = "http://bbs.gfan.com/forum.php?mod=viewthread&tid=6273531&extra=page%3D1";
 //                    String url = "http://bbs.anzhi.com/thread-6995302-1-1.html";
-                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
+//                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
 //                    String url = "http://www.smzdm.com/";
 //                    String url = "http://forum.xitek.com/forum-2-1.html";
                     String retVal[] = new WebCrawler().getContent(url);

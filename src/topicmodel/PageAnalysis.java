@@ -295,7 +295,7 @@ public class PageAnalysis {
             Element eleParent = eleList.get(0).parent();
             while(eleParent != root){
                 if(feMap.containsKey(eleParent)){
-                    if(eleList.size() < feMap.get(eleParent).getContinualNum()){
+                    if(eleList.size() * feMap.get(eleList.get(0)).getContinualNum() < feMap.get(eleParent).getContinualNum()){
                         for(Element ele : eleList){
                             feMap.remove(ele);
                         }
