@@ -148,23 +148,31 @@ public class PageAnalysis {
         }
         List<Elements> elementsList = new ArrayList<>();
         Elements entryEles = new Elements();
-        Element priviousEle = elements.get(0).previousElementSibling();
         if(StaticLib.tagSet == null){
             StaticLib.initialTagSet();
         }
         if(fea.getComponentSize() == 1){
-            while(priviousEle != null && !priviousEle.tag().formatAsBlock() && !StaticLib.tagSet.contains(priviousEle.tagName())){
-                priviousEle = priviousEle.previousElementSibling();
-            }
-            if(priviousEle != null && (priviousEle.tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName()))){
-                entryEles.add(priviousEle);
-                elementsList.add(entryEles);
-            }
+            //should be correct
             for(int i=0; i<elements.size(); i++){
-                for(Element ele : elements.get(i).children()){
-                    entryEles = new Elements();
-                    entryEles.add(ele);
-                    elementsList.add(entryEles);
+                Elements childEles = elements.get(i).children();
+                boolean find = false;
+                for(Element ele : childEles){
+                    if(!find){
+                        String eleAttr = getVerifiedSequence(ele, 1, true, false);
+                        if(eleAttr == null){
+                            continue;
+                        }
+                        eleAttr = "@" + eleAttr.substring(1);
+                        eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
+                        if(eleAttr.equals(fea.getStartElementsInfo().get(0))){
+                            find = true;
+                        }
+                    }
+                    if(find){
+                        entryEles = new Elements();
+                        entryEles.add(ele);
+                        elementsList.add(entryEles); 
+                    }
                 }
             }
         }else{
@@ -177,6 +185,9 @@ public class PageAnalysis {
                 for(; j<childEles.size(); j++){
                     if(childEles.get(j).tag().formatAsBlock() || StaticLib.tagSet.contains(childEles.get(j).tagName())){
                         String eleAttr = getVerifiedSequence(childEles.get(j), 1, true, false);
+                        if(eleAttr == null){
+                            continue;
+                        }
                         eleAttr = "@" + eleAttr.substring(1);
                         eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
                         if(eleAttr.equals(fea.getStartElementsInfo().get(equalCount))){
@@ -196,7 +207,18 @@ public class PageAnalysis {
                 }
             }
         }
-        
+        Element priviousEle = elementsList.get(0).get(0).previousElementSibling();
+        if(priviousEle == null){
+            priviousEle = elementsList.get(0).get(0).parent().previousElementSibling();
+        }
+        while(priviousEle != null && ((!priviousEle.tag().formatAsBlock() && !StaticLib.tagSet.contains(priviousEle.tagName())) || priviousEle.text().isEmpty())){
+            priviousEle = priviousEle.previousElementSibling();
+        }
+        if(priviousEle != null && ((priviousEle.tag().formatAsBlock() || StaticLib.tagSet.contains(priviousEle.tagName())) && !priviousEle.text().isEmpty())){
+            entryEles = new Elements();
+            entryEles.add(priviousEle);
+            elementsList.add(0, entryEles);
+        }
         return elementsList;
     }
     
@@ -239,8 +261,8 @@ public class PageAnalysis {
             feMap.get(eleList.get(0)).setAttrVal(attrVal);
             int size = feMap.get(eleList.get(0)).getContinualNum() * eleList.size();
             feMap.get(eleList.get(0)).setContinualNum(size);
-            if(size * feMap.get(eleList.get(0)).getComponentSize() > maxCount){
-                maxCount = size * feMap.get(eleList.get(0)).getComponentSize();
+            if(size * feMap.get(eleList.get(0)).getComponentSize() * eleList.get(0).getAllElements().size() > maxCount){
+                maxCount = size * feMap.get(eleList.get(0)).getComponentSize()  * eleList.get(0).getAllElements().size();
                 maxEle = eleList.get(0);
             }
             for(int i=1; i<eleList.size(); i++){
@@ -293,9 +315,9 @@ public class PageAnalysis {
             }
             ArrayList<Element> eleList = seqEleMap.get(sequence);
             Element eleParent = eleList.get(0).parent();
-            while(eleParent != root){
+            while(eleParent != null && eleParent != root){
                 if(feMap.containsKey(eleParent)){
-                    if(eleList.size() * feMap.get(eleList.get(0)).getContinualNum() < feMap.get(eleParent).getContinualNum() || feMap.get(eleParent).getComponentSize() != 1){
+                    if(eleList.size() < feMap.get(eleParent).getContinualNum() || feMap.get(eleParent).getComponentSize() != 1){
                         for(Element ele : eleList){
                             feMap.remove(ele);
                         }
@@ -382,7 +404,7 @@ public class PageAnalysis {
                     currentSequence += childEleSequence.get(j);
                 }
                 while(currentIndex+2*componetSize <= childElements.size()){
-                    if(occourence == 1 && currentIndex > (childElements.size() - componetSize * continualOccourence)){
+                    if(occourence == 1 && (currentIndex > (childElements.size() - componetSize * continualOccourence) || (childElements.size() - currentIndex) / componetSize < maxOccourence)){
                         break;
                     }
                     for(int j=currentIndex+componetSize; j<currentIndex+2*componetSize; j++){
@@ -460,7 +482,7 @@ public class PageAnalysis {
             ElementNode eNode = new ElementNode();
             List<Node> nodeList = new ArrayList<>();
             for(Element ele : eles){
-                nodeList.add(getNodeInfo(ele));
+                nodeList.add(getNodeInfo(ele, null));
             }
             eNode.setNodes(nodeList);
             eNode.setPositionIndex(count++);
@@ -468,7 +490,7 @@ public class PageAnalysis {
         }
         FreqElementAttr fea = extractorRules.get(baseUrl+type);
         int continualNum = fea.getContinualNum();
-        int level = 1;
+        int level = 0;
         int maximumNum = Integer.MIN_VALUE;
         Map<String, List<ElementNode>>  seqENodeMap = new HashMap<>();
         int nochange = 0;
@@ -555,11 +577,12 @@ public class PageAnalysis {
         return eNodeTextSeq;
     }
     
+    
     private List<TextNode> getNodeTexSeq(Node node, boolean isAlign){
         List<TextNode> nodeTextSeq = new ArrayList<>();
         List<TextNodeUnit> tnuList = new ArrayList<>();
         TextNode tN = new TextNode();
-        if(!node.getTextNodeUnit().getText().trim().equals("") || (node.isIsAllHave() && node.getChildNode() == null)){
+        if(!node.getTextNodeUnit().getText().trim().equals("") || (node.isIsAllHave() && node.getChildNode() == null) || node.isHasOwnIndividualChild()){
             tnuList.add(node.getTextNodeUnit());
             tN.setTextNode(tnuList);
             nodeTextSeq.add(tN);
@@ -599,20 +622,24 @@ public class PageAnalysis {
     }
     
     private List<ElementNode> alignElementNode(List<ElementNode> eNList){
-        Map<String, Integer> seqCountMap = new HashMap<>();
+        Map<String, List<Node>> seqCountMap = new HashMap<>();
         for(ElementNode eNode : eNList){
             if(eNode.getNodes() != null){
                 for(int i=0; i<eNode.getNodes().size(); i++){
                     Node node = eNode.getNodes().get(i);
                     if(node.getChildNode() != null){
                         for(int j=0; j<node.getChildNode().size(); j++){
-                            List<String> seqList = getSeqList(node.getChildNode().get(j), i + "_" + j);
-                            for(String seq : seqList){
-                                int count = 0;
-                                if(seqCountMap.containsKey(seq)){
-                                    count = seqCountMap.get(seq);
+                            Map<String, Node> seqNodeMap = getSeqList(node.getChildNode().get(j), i + "_" + j);
+                            Iterator<String> iter = seqNodeMap.keySet().iterator();
+                            while(iter.hasNext()){
+                                String key = iter.next();
+                                if(seqCountMap.containsKey(key)){
+                                    seqCountMap.get(key).add(seqNodeMap.get(key));
+                                }else{
+                                    List<Node> nodeList = new ArrayList<>();
+                                    nodeList.add(seqNodeMap.get(key));
+                                    seqCountMap.put(key, nodeList);
                                 }
-                                seqCountMap.put(seq, count+1);
                             }
                         }
                     }
@@ -620,24 +647,29 @@ public class PageAnalysis {
             }
         }
         Set<String> necessaryNodeSeq = seqCountMap.keySet();
+        Set<String> hasOwnChildNodeSeq = new HashSet<>();
         List<String> seqList = new ArrayList<>(necessaryNodeSeq);
         for(String str : seqList){
-            if(seqCountMap.get(str) != eNList.size()){
+            if(seqCountMap.get(str).size() != eNList.size()){
+                String parentSeq = str.substring(0, str.indexOf("<"));
+                parentSeq = parentSeq.substring(0,parentSeq.lastIndexOf("_", parentSeq.length()-2)+1);
+                parentSeq += getNodeSeq(seqCountMap.get(str).get(0).getParentNode(), false, true, 1);
+                hasOwnChildNodeSeq.add(parentSeq);
                 necessaryNodeSeq.remove(str);
             }
         }
         List<ElementNode> updatedENlist = new ArrayList<>();
         for(ElementNode eNode : eNList){
-            updatedENlist.add(updateElementNode(eNode, necessaryNodeSeq));
+            updatedENlist.add(updateElementNode(eNode, necessaryNodeSeq, hasOwnChildNodeSeq));
         }
         return updatedENlist;
     }
     
-    private ElementNode updateElementNode(ElementNode eNode, Set<String> necessaryNodeSeq){
+    private ElementNode updateElementNode(ElementNode eNode, Set<String> necessaryNodeSeq, Set<String> hasOwnChildNodeSeq){
         if(eNode.getNodes() != null){
             List<Node> childNodes = new ArrayList<>();
             for(int i=0; i<eNode.getNodes().size(); i++){
-                Node node = updateNode(eNode.getNodes().get(i), necessaryNodeSeq, ""+i);
+                Node node = updateNode(eNode.getNodes().get(i), necessaryNodeSeq, hasOwnChildNodeSeq, ""+i);
                 node.setIsAllHave(true);
                 childNodes.add(node);
             }
@@ -646,30 +678,33 @@ public class PageAnalysis {
         return eNode;
     }
     
-    private Node updateNode(Node node, Set<String> necessaryNodeSeq, String prefix){
+    private Node updateNode(Node node, Set<String> necessaryNodeSeq, Set<String> hasOwnChildNodeSeq, String prefix){
         String seq = prefix + "_" + getNodeSeq(node, false, true, 1);
         if(necessaryNodeSeq.contains(seq)){
             node.setIsAllHave(true);
         }
+        if(hasOwnChildNodeSeq.contains(seq)){
+            node.setHasOwnIndividualChild(true);
+        }
         if(node.getChildNode() != null){
             List<Node> nodeList = new ArrayList<>();
             for(int i=0; i<node.getChildNode().size(); i++){
-                nodeList.add(updateNode(node.getChildNode().get(i), necessaryNodeSeq, prefix + "_" + i));
+                nodeList.add(updateNode(node.getChildNode().get(i), necessaryNodeSeq, hasOwnChildNodeSeq, prefix + "_" + i));
             }
             node.setChildNode(nodeList);
         }
         return node;
     }
     
-    private List<String> getSeqList(Node node, String prefix){
-        List<String> seqList = new ArrayList<>();
-        seqList.add(prefix + "_" + getNodeSeq(node, false, true, 1));
+    private Map<String, Node> getSeqList(Node node, String prefix){
+        Map<String, Node> seqNodeMap = new HashMap<>();
+        seqNodeMap.put(prefix + "_" + getNodeSeq(node, false, true, 1), node);
         if(node.getChildNode() != null){
             for(int i=0; i<node.getChildNode().size(); i++){
-                seqList.addAll(getSeqList(node.getChildNode().get(i), prefix + "_" + i));
+                seqNodeMap.putAll(getSeqList(node.getChildNode().get(i), prefix + "_" + i));
             }
         }
-        return seqList;
+        return seqNodeMap;
     }
     
     
@@ -735,18 +770,19 @@ public class PageAnalysis {
         return seq;
     }
     
-    public Node getNodeInfo(Element ele){
+    public Node getNodeInfo(Element ele, Node parentNode){
         Node node = new Node();
         TextNodeUnit tNU = new TextNodeUnit();
         tNU.setAttributes(ele.attributes());
         tNU.setText(ele.ownText());
         tNU.setTag(ele.tag());
         node.setTextNodeUnit(tNU);
+        node.setParentNode(parentNode);
         List<Node> childNodeList = null;
         if(ele.children().size() != 0){
             childNodeList = new ArrayList<>();
             for(Element childEle: ele.children()){
-                childNodeList.add(getNodeInfo(childEle));
+                childNodeList.add(getNodeInfo(childEle, node));
             }
         }
         node.setChildNode(childNodeList);

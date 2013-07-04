@@ -53,7 +53,7 @@ public class Test {
 //                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
 //                    String url = "http://www.smzdm.com/";
 //                    String url = "http://forum.xitek.com/forum-2-1.html";
-        String url = "http://bbs.weiphone.com/read-htm-tid-6635369.html";
+        String url = "http://bbs.xiaomi.cn/thread-7698779-1-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
 //        String content = new WebCrawler().getContentMethod2(url);
 //                    long start = System.currentTimeMillis();
@@ -163,6 +163,12 @@ public class Test {
 //        List<Elements> elesList = pa.getAnalysisiElements(content, url, true);
         System.out.println(elesList.size());
         List<List<String>> entrys = pa.getElementNode(elesList);
+        for(List<String> entry : entrys){
+            System.out.println("*******************************");
+            for(String str : entry){
+                System.out.println(str);
+            }
+        }
 //        Map<String, ArrayList<Element>> minimalGeneralSeq = pa.getMinimalGeneralizationSeq(elesList);
 //        Iterator<String> iter = minimalGeneralSeq.keySet().iterator();
 //        while(iter.hasNext()){
@@ -170,7 +176,6 @@ public class Test {
 //            System.out.println(str);
 //            System.out.println(minimalGeneralSeq.get(str).size());
 //        }
-        
     }
     
     

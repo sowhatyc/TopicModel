@@ -17,7 +17,10 @@ public class Node {
     private TextNodeUnit textNodeUnit;
     private List<Node> childNode;
     private boolean isAllHave;
+    private Node parentNode;
+    private boolean hasOwnIndividualChild;
 
+    
     /**
      * @return the childNode
      */
@@ -58,6 +61,34 @@ public class Node {
      */
     public void setTextNodeUnit(TextNodeUnit textNodeUnit) {
         this.textNodeUnit = textNodeUnit;
+    }
+
+    /**
+     * @return the parentNode
+     */
+    public Node getParentNode() {
+        return parentNode;
+    }
+
+    /**
+     * @param parentNode the parentNode to set
+     */
+    public void setParentNode(Node parentNode) {
+        this.parentNode = parentNode;
+    }
+
+    /**
+     * @return the hasOwnIndividualChild
+     */
+    public boolean isHasOwnIndividualChild() {
+        return hasOwnIndividualChild;
+    }
+
+    /**
+     * @param hasOwnIndividualChild the hasOwnIndividualChild to set
+     */
+    public void setHasOwnIndividualChild(boolean hasOwnIndividualChild) {
+        this.hasOwnIndividualChild = hasOwnIndividualChild;
     }
 
     
