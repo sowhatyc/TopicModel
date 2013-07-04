@@ -53,11 +53,12 @@ public class PageAnalysis {
                     String domainName = domainEle.ownText();
                     FreqElementAttr fea = new FreqElementAttr();
                     fea.setComponentSize(Integer.valueOf(domainEle.getElementsByTag("componentSize").first().ownText()));
-                    fea.setContinualNum(Integer.valueOf(domainEle.getElementsByTag("continualnum").first().ownText()));
-                    fea.setAttrKey(domainEle.getElementsByTag("attrkey").first().ownText());
-                    fea.setAttrVal(domainEle.getElementsByTag("attrval").first().ownText());
+                    fea.setContinualNum(Integer.valueOf(domainEle.getElementsByTag("continualNum").first().ownText()));
+                    fea.setRepeatElementSize(Integer.valueOf(domainEle.getElementsByTag("repeatElementSize").first().ownText()));
+                    fea.setAttrKey(domainEle.getElementsByTag("attrKey").first().ownText());
+                    fea.setAttrVal(domainEle.getElementsByTag("attrVal").first().ownText());
                     List<String> startElementInfo = new ArrayList<>();
-                    Elements startInfoEles = domainEle.getElementsByTag("eleinfo");
+                    Elements startInfoEles = domainEle.getElementsByTag("eleInfo");
                     for(Element infoEle : startInfoEles){
                         startElementInfo.add(infoEle.ownText());
                     }
@@ -105,6 +106,7 @@ public class PageAnalysis {
             String entry = "<domainName>" + baseUrl + type;
             entry += "<componentSize>" + fea.getComponentSize() + "</componentSize>";
             entry += "<continualNum>" + fea.getContinualNum() + "</continualNum>";
+            entry += "<repeatElementSize>" + fea.getRepeatElementSize() + "</repeatElementSize>";
             entry += "<attrKey>" + fea.getAttrKey() + "</attrKey>";
             entry += "<attrVal>" + fea.getAttrVal() + "</attrVal>";
             for(String startEleInfo : fea.getStartElementsInfo()){
@@ -164,6 +166,7 @@ public class PageAnalysis {
                         }
                         eleAttr = "@" + eleAttr.substring(1);
                         eleAttr = eleAttr.substring(0, eleAttr.indexOf("</")-1);
+                        
                         if(eleAttr.equals(fea.getStartElementsInfo().get(0))){
                             find = true;
                         }
@@ -208,7 +211,7 @@ public class PageAnalysis {
             }
         }
         Element priviousEle = elementsList.get(0).get(0).previousElementSibling();
-        if(priviousEle == null){
+        if(priviousEle == null || priviousEle.text().isEmpty()){
             priviousEle = elementsList.get(0).get(0).parent().previousElementSibling();
         }
         while(priviousEle != null && ((!priviousEle.tag().formatAsBlock() && !StaticLib.tagSet.contains(priviousEle.tagName())) || priviousEle.text().isEmpty())){
@@ -317,7 +320,8 @@ public class PageAnalysis {
             Element eleParent = eleList.get(0).parent();
             while(eleParent != null && eleParent != root){
                 if(feMap.containsKey(eleParent)){
-                    if(eleList.size() < feMap.get(eleParent).getContinualNum() || feMap.get(eleParent).getComponentSize() != 1){
+                    if((eleList.size() < feMap.get(eleParent).getContinualNum() && feMap.get(eleList.get(0)).getContinualNum() * feMap.get(eleList.get(0)).getRepeatElementSize()
+                            < feMap.get(eleParent).getContinualNum() * feMap.get(eleParent).getRepeatElementSize())|| feMap.get(eleParent).getComponentSize() != 1){
                         for(Element ele : eleList){
                             feMap.remove(ele);
                         }
@@ -391,7 +395,10 @@ public class PageAnalysis {
         }
         int maxOccourence = 0;
         int componetSize;
+        int repeatElementSize = 0;
+        int repeatElementSizeCpy = 0;
         List<String> startElementsInfo = new ArrayList<>();
+        List<String> startElementsInfoCpy = new ArrayList<>();
         for(componetSize=1; componetSize<=childElements.size()/continualOccourence; componetSize++){
             int occourence = 1;
             maxOccourence = 0;
@@ -412,21 +419,26 @@ public class PageAnalysis {
                     }
                     if(currentSequence.compareTo(nextSequence) == 0){
                         if(occourence == 1){
-                            startElementsInfo.clear();
+                            repeatElementSizeCpy = 0;
+                            startElementsInfoCpy.clear();
                             for(int k=currentIndex; k<currentIndex+componetSize; k++){
                                 String info = "";
                                 Element eleInfo = childElements.get(k);
+                                repeatElementSizeCpy += eleInfo.getAllElements().size();
                                 info = "@" + eleInfo.tagName();
                                 for(Attribute attr : eleInfo.attributes()){
                                     info += " " + attr.getKey();
                                 }
-                                startElementsInfo.add(info);
+                                startElementsInfoCpy.add(info);
                             }
                         }
                         occourence++;
                     }else{
                         if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
+                            startElementsInfo.clear();
+                            startElementsInfo.addAll(startElementsInfoCpy);
                             maxOccourence = occourence;
+                            repeatElementSize = repeatElementSizeCpy;
                         }
                         occourence = 1; 
                         currentSequence = nextSequence;
@@ -436,6 +448,9 @@ public class PageAnalysis {
                 }
                 if(occourence > maxOccourence && isSequenceSingleLevel(currentSequence)){
                     maxOccourence = occourence;
+                    startElementsInfo.clear();
+                    startElementsInfo.addAll(startElementsInfoCpy);
+                    repeatElementSize = repeatElementSizeCpy;
                 }
             }
             if(maxOccourence >= continualOccourence){
@@ -446,6 +461,7 @@ public class PageAnalysis {
             FreqElementAttr lfe = new FreqElementAttr();
             lfe.setComponentSize(componetSize);
             lfe.setContinualNum(maxOccourence);
+            lfe.setRepeatElementSize(repeatElementSize);
             lfe.setStartElementsInfo(startElementsInfo);
             return lfe;
         }else{
@@ -523,7 +539,7 @@ public class PageAnalysis {
             if(nochange >= 3){
                 break;
             }
-        }while(maximumNum > continualNum);
+        }while(maximumNum >= continualNum);
         
         Iterator<String> iter = seqENodeMap.keySet().iterator();
         eNodeList.clear();

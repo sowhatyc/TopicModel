@@ -16,6 +16,7 @@ public class FreqElementAttr {
     
     private int componentSize;
     private int continualNum;
+    private int repeatElementSize;
     private String attrKey;
     private String attrVal;
     private List<String> startElementsInfo;
@@ -89,6 +90,20 @@ public class FreqElementAttr {
      */
     public void setStartElementsInfo(List<String> startElementsInfo) {
         this.startElementsInfo = startElementsInfo;
+    }
+
+    /**
+     * @return the repeatElementSize
+     */
+    public int getRepeatElementSize() {
+        return repeatElementSize;
+    }
+
+    /**
+     * @param repeatElementSize the repeatElementSize to set
+     */
+    public void setRepeatElementSize(int repeatElementSize) {
+        this.repeatElementSize = repeatElementSize;
     }
 
 

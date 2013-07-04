@@ -53,7 +53,7 @@ public class Test {
 //                    String url = "http://bbs.anzhi.com/forum-1020-1.html";
 //                    String url = "http://www.smzdm.com/";
 //                    String url = "http://forum.xitek.com/forum-2-1.html";
-        String url = "http://bbs.xiaomi.cn/thread-7698779-1-1.html";
+        String url = "http://bbs.dospy.com/thread-15727296-1-741-1.html";
                     String retVal[] = new WebCrawler().getContent(url);
 //        String content = new WebCrawler().getContentMethod2(url);
 //                    long start = System.currentTimeMillis();

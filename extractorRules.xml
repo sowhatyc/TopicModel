@@ -34,3 +34,4 @@
 <domainName>http://bbs.southcn.com/listpage<componentSize>1</componentSize><continualNum>52</continualNum><attrKey>summary</attrKey><attrVal>forum_14</attrVal><eleInfo>@tbody</eleInfo></domainName>
 <domainName>http://bbs.southcn.com/contentpage<componentSize>1</componentSize><continualNum>20</continualNum><attrKey>id</attrKey><attrVal>postlist</attrVal><eleInfo>@div id</eleInfo></domainName>
 <domainName>http://bbs.xiaomi.cn/listpage<componentSize>1</componentSize><continualNum>40</continualNum><attrKey>summary</attrKey><attrVal>forum_1</attrVal><eleInfo>@tbody id</eleInfo></domainName>
+<domainName>http://bbs.xiaomi.cn/contentpage<componentSize>1</componentSize><continualNum>25</continualNum><attrKey>id</attrKey><attrVal>ct</attrVal><eleInfo>@div id class style</eleInfo></domainName>
